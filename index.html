@@ -68,7 +68,6 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Фон на весь экран, включая область под статус-баром */
   body::before, body::after {
     content: "";
     position: fixed;
@@ -134,7 +133,7 @@
   html.is-loading .screen.active,
   html.is-loading .dock { opacity: 0; visibility: hidden; }
 
-  /* ---------- Экраны: одна колонка по центру на любом устройстве ---------- */
+  /* ---------- Экраны ---------- */
   .screen {
     position: fixed;
     top: 0;
@@ -156,6 +155,16 @@
   .screen.active { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
   .hidden { display: none !important; }
 
+  /* Файловые поля: скрыты, но открываются кнопками (не display:none) */
+  .file-hidden {
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
   .round-btn {
     flex: 0 0 auto;
     width: 52px;
@@ -174,7 +183,7 @@
   .round-btn:active { transform: scale(.94); }
   .head-row { display: flex; justify-content: flex-end; align-items: center; min-height: 52px; width: 100%; }
 
-  /* Кнопка «написать»: серая и недоступная после публикации */
+  /* Серая недоступная кнопка после публикации */
   .limit-pill {
     flex: 0 0 auto;
     display: inline-flex;
@@ -353,7 +362,6 @@
   .act-wrap { margin-left: auto; display: flex; gap: 8px; }
   .feed-empty { text-align: center; font-size: 20px; font-weight: 800; margin-top: 60px; }
 
-  /* Панель выбора реакции (по долгому нажатию) */
   .picker {
     position: fixed;
     z-index: 45;
@@ -385,7 +393,7 @@
     left: 50%;
     top: calc(var(--safe-top) + 14px);
     transform: translate(-50%, -20px);
-    z-index: 60;
+    z-index: 80;
     width: max-content;
     max-width: calc(100% - 40px);
     padding: 10px 16px;
@@ -432,15 +440,47 @@
   .sheet::-webkit-scrollbar { display: none; }
   .sheet h3 { font-size: clamp(20px, 6vw, 24px); font-weight: 900; margin-bottom: 14px; text-align: center; }
 
-  .fmt-bar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-  .fmt {
-    width: 42px;
+  /* Маленькая кнопка фото и подсказка над полем */
+  .photo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .photo-btn {
+    width: 40px;
     height: 40px;
     border-radius: 12px;
     border: 2px solid #fff;
     background: rgba(255, 255, 255, .18);
     color: #fff;
-    font: 900 18px "Nunito", system-ui, sans-serif;
+    font-size: 18px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+  }
+  .photo-btn:active { transform: scale(.92); background: rgba(255, 255, 255, .35); }
+  .photo-row .hint-note { margin: 0; }
+
+  /* Панель форматирования: появляется над выделенным текстом */
+  .sel-bar {
+    position: fixed;
+    z-index: 70;
+    display: none;
+    gap: 6px;
+    padding: 6px;
+    border-radius: 16px;
+    background: var(--sheet-bg);
+    border: 2px solid rgba(255, 255, 255, .9);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 8px 20px rgba(5, 25, 60, .35);
+  }
+  .sel-bar.show { display: flex; animation: pop .15s ease both; }
+  .fmt {
+    width: 40px;
+    height: 38px;
+    border-radius: 11px;
+    border: 2px solid #fff;
+    background: rgba(255, 255, 255, .18);
+    color: #fff;
+    font: 900 17px "Nunito", system-ui, sans-serif;
     cursor: pointer;
     display: grid;
     place-items: center;
@@ -451,7 +491,6 @@
   .fmt.i { font-style: italic; }
   .fmt.u { text-decoration: underline; }
   .fmt.s { text-decoration: line-through; }
-  .fmt.photo { font-size: 18px; margin-left: auto; }
 
   .editor {
     width: 100%;
@@ -598,6 +637,19 @@
   }
   .tg-warn a { color: #fff; font-weight: 900; text-decoration: underline; }
   .tg-warn .bang { margin-top: 1px; }
+
+  .link-btn {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    background: none;
+    border: none;
+    color: #fff;
+    font: 900 16px "Nunito", system-ui, sans-serif;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 6px;
+  }
 
   input[type=text] {
     width: 100%;
@@ -927,9 +979,9 @@
       </div>
 
       <div data-step="2" class="hidden">
-        <div class="step-title">🏷️ Придумайте ЮЗ</div>
+        <div class="step-title">🏷️ Придумайте TulenID</div>
         <input type="text" id="regApp" maxlength="20" placeholder="например, vika_mog">
-        <div class="hint-note">Латиница, цифры и _ (3–20 символов). Этот ЮЗ будет входить в Чат Тюленчика.</div>
+        <div class="hint-note">Латиница, цифры и _ (3–20 символов). Этот TulenID будет входить в Чат Тюленчика.</div>
         <div class="row">
           <button class="btn ghost" data-back="2" type="button">⬅ Назад</button>
           <button class="btn" data-next="2" type="button">Дальше ➜</button>
@@ -939,7 +991,7 @@
       <div data-step="3" class="hidden">
         <div class="step-title">📷 Фото профиля</div>
         <div class="photo-pick" id="regPhoto" role="button" tabindex="0">➕</div>
-        <input type="file" id="regFile" accept="image/*" class="hidden">
+        <input type="file" id="regFile" accept="image/*" class="file-hidden">
         <div class="hint-note">Можно пропустить и поставить позже в профиле.</div>
         <div class="row">
           <button class="btn ghost" data-back="3" type="button">⬅ Назад</button>
@@ -970,15 +1022,40 @@
 
     <!-- Вход -->
     <div class="card hidden" id="loginForm">
-      <label class="field-label" for="loginApp">🔑 Юзернейм Чата Тюленчика</label>
-      <input type="text" id="loginApp" maxlength="20" placeholder="например, vika_mog">
+      <label class="field-label" for="loginApp">🔑 Ваш TulenID</label>
+      <input type="text" id="loginApp" maxlength="20" placeholder="Введите ваш TulenID">
       <button class="btn" id="loginBtn" type="button">✅ Подтвердить вход через Телеграм</button>
+      <button class="link-btn" id="forgotBtn" type="button">Забыли TulenID?</button>
       <div class="hint-note">Бот пришлёт запрос в ваш Telegram. Вход будет только после вашего подтверждения.</div>
       <div class="tg-warn">
         <span class="bang" aria-hidden="true">!</span>
         <span>Перед входом перейдите к боту <a href="https://t.me/tulenchik_helper_bot" target="_blank" rel="noopener">@tulenchik_helper_bot</a> и нажмите /start, если раньше этого не делали</span>
       </div>
       <div id="loginErr"></div>
+    </div>
+
+    <!-- Забыли TulenID: ввод Telegram -->
+    <div class="card hidden" id="forgotForm">
+      <div class="step-title">🔎 Восстановление TulenID</div>
+      <label class="field-label" for="forgotTg">✈️ Telegram-username, привязанный к профилю</label>
+      <input type="text" id="forgotTg" maxlength="33" placeholder="@username">
+      <div class="hint-note">Бот пришлёт ваш TulenID и спросит, хотите ли его сменить.</div>
+      <button class="btn" id="forgotSend" type="button">Отправить в Telegram</button>
+      <button class="link-btn" id="forgotBack" type="button">⬅ Назад ко входу</button>
+      <div id="forgotErr"></div>
+    </div>
+
+    <!-- Новый TulenID после подтверждения в боте -->
+    <div class="card hidden" id="newIdForm">
+      <div class="step-title">🎫 Новый TulenID</div>
+      <label class="field-label" for="newId">Введите новый TulenID</label>
+      <input type="text" id="newId" maxlength="20" placeholder="Например, vika_new">
+      <div class="hint-note">Латиница, цифры и _ (3–20 символов)</div>
+      <div class="row">
+        <button class="btn ghost" id="newIdCancel" type="button">Отмена</button>
+        <button class="btn" id="newIdSave" type="button">Сохранить</button>
+      </div>
+      <div id="newIdErr"></div>
     </div>
 
     <!-- Ожидание кнопки в Telegram -->
@@ -996,13 +1073,13 @@
       <button class="round-btn" id="editBtn" type="button" aria-label="Редактировать профиль">✏️</button>
     </div>
     <div class="photo empty" id="photo" role="button" tabindex="0" aria-label="Поменять фото"></div>
-    <input type="file" id="fileInput" accept="image/*" class="hidden">
+    <input type="file" id="fileInput" accept="image/*" class="file-hidden">
     <div class="p-name" id="pName"></div>
     <div class="app-line">
       <img class="app-ico" src="https://i.postimg.cc/50xwDQfv/IMG-5430.png" alt="">
       <b id="pApp"></b>
     </div>
-    <div class="app-cap">юзернейм</div>
+    <div class="app-cap">TulenID</div>
     <div class="p-row">
       <img class="tg-ico" src="https://i.postimg.cc/26mY4rrc/IMG-1801.png" alt="">
       <span>Telegram: <b id="pTg"></b></span>
@@ -1025,15 +1102,12 @@
 <div class="modal" id="modal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
     <h3 id="sheetTitle">Новое объявление</h3>
-    <div class="fmt-bar">
-      <button class="fmt b" type="button" data-cmd="bold" aria-label="Жирный">B</button>
-      <button class="fmt i" type="button" data-cmd="italic" aria-label="Курсив">I</button>
-      <button class="fmt u" type="button" data-cmd="underline" aria-label="Подчёркнутый">U</button>
-      <button class="fmt s" type="button" data-cmd="strikeThrough" aria-label="Зачёркнутый">S</button>
-      <button class="fmt photo" type="button" id="photoBtn" aria-label="Добавить фото">🖼️</button>
+    <div class="photo-row">
+      <button class="photo-btn" id="photoBtn" type="button" aria-label="Добавить фото">🖼️</button>
+      <div class="hint-note">Выделите текст, чтобы появились кнопки оформления</div>
     </div>
-    <div class="editor" id="editor" contenteditable="true" data-placeholder="Напишите объявление. Выделите слово и нажмите кнопку, чтобы оформить текст"></div>
-    <input type="file" id="postFile" accept="image/*" class="hidden">
+    <div class="editor" id="editor" contenteditable="true" data-placeholder="Напишите объявление..."></div>
+    <input type="file" id="postFile" accept="image/*" class="file-hidden">
     <div id="postImgWrap"></div>
     <div id="postErr"></div>
     <div class="row" style="margin-top:14px">
@@ -1041,6 +1115,14 @@
       <button class="btn" id="saveBtn" type="button">Опубликовать</button>
     </div>
   </div>
+</div>
+
+<!-- Панель форматирования: появляется над выделенным текстом -->
+<div class="sel-bar" id="selBar" role="toolbar" aria-label="Оформление текста">
+  <button class="fmt b" type="button" data-cmd="bold" aria-label="Жирный">B</button>
+  <button class="fmt i" type="button" data-cmd="italic" aria-label="Курсив">I</button>
+  <button class="fmt u" type="button" data-cmd="underline" aria-label="Подчёркнутый">U</button>
+  <button class="fmt s" type="button" data-cmd="strikeThrough" aria-label="Зачёркнутый">S</button>
 </div>
 
 <!-- Редактирование профиля -->
@@ -1053,9 +1135,9 @@
 
     <label class="field-label" for="editApp">
       <img class="app-ico" src="https://i.postimg.cc/50xwDQfv/IMG-5430.png" alt="" style="width:22px;height:22px;vertical-align:middle">
-      ЮЗ чата
+      TulenID
     </label>
-    <input type="text" id="editApp" maxlength="20" placeholder="ЮЗ">
+    <input type="text" id="editApp" maxlength="20" placeholder="TulenID">
     <div class="hint-note">Латиница, цифры и _ (3–20 символов)</div>
 
     <div class="hint-note" style="margin-top:14px;text-align:center">📷 Фото: нажмите на фото в профиле</div>
@@ -1114,8 +1196,8 @@
   const POLL_MS = 2000;
   const WAIT_MS = 190000;
   const REACTIONS = ['👍', '👎', '❤️', '🤬', '💩'];
-  const MAX_IMG_SIDE = 900;      // фото сжимаются до 900 пикселей
-  const MAX_IMG_BYTES = 700000;  // и не больше ~700 КБ
+  const MAX_IMG_SIDE = 900;
+  const MAX_IMG_BYTES = 700000;
   const $ = id => document.getElementById(id);
 
   const html = document.documentElement;
@@ -1135,9 +1217,10 @@
   let posts = [];
   let limit = null;
   let limitTimer = null;
-  let currentTab = 'reg';
+  let currentView = 'reg';
   let postImage = '';
   let editingId = null;
+  let grant = '';
 
   const pad2 = n => String(n).padStart(2, '0');
 
@@ -1328,7 +1411,6 @@
   setInterval(tick, 1000);
 
   /* ---------- Безопасное форматирование текста ---------- */
-  // Оставляем только b, i, u, s и переносы строк; всё остальное удаляем
   function sanitize(src) {
     const map = { strong: 'b', b: 'b', em: 'i', i: 'i', u: 'u', strike: 's', s: 's', del: 's', br: 'br', div: 'div', p: 'div' };
     let s = String(src || '').replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, (m, tag) => {
@@ -1349,7 +1431,7 @@
     return d.textContent.trim().length;
   }
 
-  /* ---------- Доска (хранится на сервере) ---------- */
+  /* ---------- Доска ---------- */
   const feed = $('feed');
 
   function fmtDate(ts) {
@@ -1431,12 +1513,10 @@
         const c = document.createElement('span');
         c.textContent = p.reactions[emo];
         chip.append(e, c);
-        // Нажатие по своей реакции её убирает
         chip.addEventListener('click', () => { if (mine) react(p.id, emo); });
         rx.append(chip);
       });
 
-      // Изменить и удалить — только свои объявления
       if (p.own) {
         const wrap = document.createElement('div');
         wrap.className = 'act-wrap';
@@ -1503,7 +1583,6 @@
     }
   }
 
-  // Выбрать реакцию: та же — убрать; другая — заменить
   async function chooseReaction(postId, emoji) {
     const p = posts.find(x => x.id === postId);
     const mine = (p && p.mine) || [];
@@ -1512,7 +1591,6 @@
     await react(postId, emoji);
   }
 
-  /* Панель реакций по долгому нажатию */
   const picker = document.createElement('div');
   picker.className = 'picker hidden';
   REACTIONS.forEach(emo => {
@@ -1579,7 +1657,6 @@
     if (!picker.classList.contains('hidden') && !picker.contains(e.target)) hidePicker();
   });
 
-  /* ---------- Удаление своего объявления ---------- */
   async function removePost(p) {
     if (!window.confirm('Удалить объявление?')) return;
     try {
@@ -1588,6 +1665,7 @@
         posts = r.data.posts;
         limit = r.data.limit || limit;
         renderFeed();
+        renderLimit();
         toast('🗑️ Объявление удалено');
       } else if (r.status === 401) {
         toast('Сессия закончилась, войдите снова');
@@ -1599,9 +1677,10 @@
     }
   }
 
-  /* ---------- Окно объявления: новое или изменение ---------- */
+  /* ---------- Окно объявления ---------- */
   const modal = $('modal');
   const editor = $('editor');
+  const selBar = $('selBar');
 
   function resizeImage(file, cb) {
     if (!file || !file.type.startsWith('image/')) return;
@@ -1616,7 +1695,6 @@
         c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
         let quality = 0.8;
         let data = c.toDataURL('image/jpeg', quality);
-        // Если всё ещё велико, сжимаем сильнее
         while (data.length > MAX_IMG_BYTES * 1.37 && quality > 0.4) {
           quality -= 0.1;
           data = c.toDataURL('image/jpeg', quality);
@@ -1659,16 +1737,48 @@
     setTimeout(() => editor.focus(), 50);
   }
 
-  // Кнопки форматирования не забирают выделение текста
-  document.querySelectorAll('.fmt[data-cmd]').forEach(btn => {
+  function closeModal() {
+    modal.hidden = true;
+    editingId = null;
+    selBar.classList.remove('show');
+  }
+  $('cancelBtn').addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+  /* Панель оформления: показывается над выделением, не забирает выделение */
+  function updateSelBar() {
+    const sel = window.getSelection();
+    if (modal.hidden || !sel || sel.rangeCount === 0 || sel.isCollapsed || !editor.contains(sel.anchorNode)) {
+      selBar.classList.remove('show');
+      return;
+    }
+    const rect = sel.getRangeAt(0).getBoundingClientRect();
+    if (!rect.width && !rect.height) {
+      selBar.classList.remove('show');
+      return;
+    }
+    selBar.classList.add('show');
+    const bw = selBar.offsetWidth;
+    const bh = selBar.offsetHeight;
+    let left = rect.left + rect.width / 2 - bw / 2;
+    left = Math.max(8, Math.min(window.innerWidth - bw - 8, left));
+    let top = rect.top - bh - 8;
+    if (top < 8) top = rect.bottom + 8;
+    selBar.style.left = left + 'px';
+    selBar.style.top = top + 'px';
+  }
+  document.addEventListener('selectionchange', updateSelBar);
+  window.addEventListener('resize', updateSelBar);
+
+  selBar.querySelectorAll('.fmt').forEach(btn => {
     btn.addEventListener('pointerdown', e => e.preventDefault());
     btn.addEventListener('click', () => {
-      editor.focus();
       document.execCommand(btn.dataset.cmd, false, null);
+      setTimeout(updateSelBar, 0);
     });
   });
 
-  $('photoBtn').addEventListener('pointerdown', e => e.preventDefault());
+  // Кнопка фото: без preventDefault, чтобы выбор файла открывался
   $('photoBtn').addEventListener('click', () => $('postFile').click());
   $('postFile').addEventListener('change', () => {
     const f = $('postFile').files[0];
@@ -1679,16 +1789,11 @@
     });
   });
 
-  function closeModal() { modal.hidden = true; editingId = null; }
-  $('cancelBtn').addEventListener('click', closeModal);
-  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
-
   $('saveBtn').addEventListener('click', async () => {
     const text = sanitize(editor.innerHTML);
     if (!plainLength(text) && !postImage) return err('postErr', '✏️ Напишите текст или добавьте фото');
     if (plainLength(text) > 2000) return err('postErr', '✏️ Текст слишком длинный');
 
-    // Новое объявление: если лимит исчерпан, не отправляем
     if (!editingId && limit && limit.used >= limit.max) {
       return err('postErr', '⏳ Сегодня уже было опубликовано объявление. Следующее можно завтра');
     }
@@ -1728,15 +1833,15 @@
   /* ---------- Ожидание кнопки в Telegram ---------- */
   let cancelWait = null;
 
+  // Скрывает все карточки входа и показывает ожидание
   function showWait(text) {
     $('waitText').textContent = text;
-    $('authBlock').querySelectorAll('.tabs, #regForm, #loginForm').forEach(el => el.classList.add('hidden'));
+    $('authBlock').querySelectorAll('.tabs, #regForm, #loginForm, #forgotForm, #newIdForm').forEach(el => el.classList.add('hidden'));
     $('waitBox').classList.remove('hidden');
   }
   function hideWait() {
     $('waitBox').classList.add('hidden');
-    $('authBlock').querySelectorAll('.tabs').forEach(el => el.classList.remove('hidden'));
-    showTab(currentTab);
+    showView(currentView);
     cancelWait = null;
   }
   $('waitCancel').addEventListener('click', () => { if (cancelWait) cancelWait('cancelled'); });
@@ -1778,8 +1883,7 @@
       $('profileBlock').classList.add('hidden');
       $('authBlock').classList.remove('hidden');
       $('waitBox').classList.add('hidden');
-      $('authBlock').querySelectorAll('.tabs').forEach(el => el.classList.remove('hidden'));
-      showTab(currentTab);
+      showView(currentView);
     }
     renderLimit();
   }
@@ -1797,24 +1901,27 @@
     else if (res.status === 'expired') err(errId, expiredText);
   }
 
-  /* ---------- Вкладки входа ---------- */
-  function showTab(which) {
-    currentTab = which;
-    const isReg = which === 'reg';
+  /* ---------- Виды входа: регистрация, вход, восстановление, новый TulenID ---------- */
+  function showView(name) {
+    currentView = name;
+    const isReg = name === 'reg';
+    const isLogin = name === 'login';
     $('tabReg').classList.toggle('on', isReg);
-    $('tabLogin').classList.toggle('on', !isReg);
+    $('tabLogin').classList.toggle('on', isLogin);
+    // Вкладки видны только в регистрации и входе
+    $('authBlock').querySelector('.tabs').classList.toggle('hidden', !(isReg || isLogin));
     $('regForm').classList.toggle('hidden', !isReg);
-    $('loginForm').classList.toggle('hidden', isReg);
+    $('loginForm').classList.toggle('hidden', !isLogin);
+    $('forgotForm').classList.toggle('hidden', name !== 'forgot');
+    $('newIdForm').classList.toggle('hidden', name !== 'newid');
     if (isReg) showStep(reg.step || 1);
   }
-  $('tabReg').addEventListener('click', () => showTab('reg'));
-  $('tabLogin').addEventListener('click', () => showTab('login'));
+  $('tabReg').addEventListener('click', () => showView('reg'));
+  $('tabLogin').addEventListener('click', () => showView('login'));
 
-  /* ---------- Подсказки «?» (регистрация и профиль) ---------- */
-  function closeTips(except) {
-    document.querySelectorAll('.tip').forEach(t => {
-      if (t !== except) t.classList.add('hidden');
-    });
+  /* ---------- Подсказки «?» ---------- */
+  function closeTips() {
+    document.querySelectorAll('.tip').forEach(t => t.classList.add('hidden'));
     document.querySelectorAll('.help-btn').forEach(b => b.setAttribute('aria-expanded', 'false'));
   }
   document.querySelectorAll('.help-btn').forEach(btn => {
@@ -1822,7 +1929,7 @@
       e.stopPropagation();
       const tip = $(btn.dataset.tip);
       const wasOpen = !tip.classList.contains('hidden');
-      closeTips(null);
+      closeTips();
       if (!wasOpen) {
         tip.classList.remove('hidden');
         btn.setAttribute('aria-expanded', 'true');
@@ -1831,7 +1938,7 @@
   });
   document.addEventListener('pointerdown', e => {
     if (e.target.closest && (e.target.closest('.help-btn') || e.target.closest('.tip'))) return;
-    closeTips(null);
+    closeTips();
   });
 
   /* ---------- Фото: квадрат, 256 пикселей ---------- */
@@ -1879,7 +1986,7 @@
       }
       if (n === 2) {
         const app = $('regApp').value.trim();
-        if (!APP_RE.test(app)) return err('regErr', '🏷️ ЮЗ: 3–20 символов, латиница, цифры или _');
+        if (!APP_RE.test(app)) return err('regErr', '🏷️ TulenID: 3–20 символов, латиница, цифры или _');
         reg.app = app;
       }
       showStep(n + 1);
@@ -1935,7 +2042,7 @@
   /* ---------- Вход ---------- */
   $('loginBtn').addEventListener('click', async () => {
     const app = $('loginApp').value.trim();
-    if (!APP_RE.test(app)) return err('loginErr', '🔍 Введите ЮЗ Чата Тюленчика');
+    if (!APP_RE.test(app)) return err('loginErr', '🔍 Введите ваш TulenID');
 
     $('loginBtn').disabled = true;
     err('loginErr', '');
@@ -1947,7 +2054,7 @@
         if (start.data.error === 'start_bot') {
           err('loginErr', '🤖 Откройте @tulenchik_helper_bot, нажмите /start и попробуйте снова');
         } else {
-          err('loginErr', '🔍 Такого ЮЗ нет. Сначала зарегистрируйтесь');
+          err('loginErr', '🔍 Такого TulenID нет. Сначала зарегистрируйтесь');
         }
         return;
       }
@@ -1963,6 +2070,80 @@
     }
   });
 
+  /* ---------- Забыли TulenID ---------- */
+  $('forgotBtn').addEventListener('click', () => showView('forgot'));
+  $('forgotBack').addEventListener('click', () => showView('login'));
+
+  $('forgotSend').addEventListener('click', async () => {
+    const tg = $('forgotTg').value.trim().replace(/^@/, '');
+    if (!TG_RE.test(tg)) return err('forgotErr', '✈️ Введите Telegram-username, привязанный к профилю');
+
+    $('forgotSend').disabled = true;
+    err('forgotErr', '');
+    showWait('⏳ Отправляем запрос в Telegram...');
+    try {
+      const start = await api('POST', '/forgot/start', { tg });
+      if (!start.ok) {
+        hideWait();
+        if (start.data.error === 'start_bot') {
+          err('forgotErr', '🤖 Откройте @tulenchik_helper_bot, нажмите /start и попробуйте снова');
+        } else {
+          err('forgotErr', '🔍 ' + (start.data.error || 'Аккаунт не найден'));
+        }
+        return;
+      }
+      showWait('⏳ Ответьте на сообщение бота в Telegram');
+      const res = await waitForConfirm(start.data.id);
+      hideWait();
+      if (res.status === 'yes' && res.grant) {
+        grant = res.grant;
+        showView('newid');
+      } else if (res.status === 'no') {
+        toast('Ничего не изменилось');
+        showView('login');
+      } else if (res.status === 'expired') {
+        err('forgotErr', '⏳ Время вышло, попробуйте ещё раз');
+      }
+    } catch (_) {
+      hideWait();
+      err('forgotErr', '📡 Нет связи с сервером, попробуйте позже');
+    } finally {
+      $('forgotSend').disabled = false;
+    }
+  });
+
+  $('newIdCancel').addEventListener('click', () => {
+    grant = '';
+    showView('login');
+  });
+
+  $('newIdSave').addEventListener('click', async () => {
+    const id = $('newId').value.trim();
+    if (!APP_RE.test(id)) return err('newIdErr', '🎫 TulenID: 3–20 символов, латиница, цифры или _');
+
+    $('newIdSave').disabled = true;
+    err('newIdErr', '');
+    try {
+      const r = await api('POST', '/tulenid/change', { grant, tulenid: id });
+      if (r.ok) {
+        grant = '';
+        setToken(r.data.token);
+        me = r.data.user;
+        $('newId').value = '';
+        refreshProfileUI();
+        toast('✅ TulenID изменён');
+      } else if (r.status === 410) {
+        err('newIdErr', '⏳ Время вышло, начните восстановление заново');
+      } else {
+        err('newIdErr', '⚠️ ' + (r.data.error || 'Не получилось сохранить'));
+      }
+    } catch (_) {
+      err('newIdErr', '📡 Нет связи с сервером, попробуйте позже');
+    } finally {
+      $('newIdSave').disabled = false;
+    }
+  });
+
   /* ---------- Профиль: фото, редактирование, выход ---------- */
   async function saveProfile(fields) {
     const r = await api('POST', '/profile', fields, getToken());
@@ -1975,7 +2156,7 @@
     clearToken();
     me = null;
     limit = null;
-    showTab('reg');
+    showView('reg');
     refreshProfileUI();
   });
 
@@ -2004,7 +2185,7 @@
     const name = $('editName').value.trim();
     const app = $('editApp').value.trim();
     if (!name) return err('editErr', '✏️ Напишите имя');
-    if (!APP_RE.test(app)) return err('editErr', '🏷️ ЮЗ: 3–20 символов, латиница, цифры или _');
+    if (!APP_RE.test(app)) return err('editErr', '🏷️ TulenID: 3–20 символов, латиница, цифры или _');
 
     $('editSave').disabled = true;
     const res = await saveProfile({ name, app });
@@ -2027,7 +2208,7 @@
   });
 
   /* ---------- Старт ---------- */
-  showTab('reg');
+  showView('reg');
 })();
 </script>
 </body>
