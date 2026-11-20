@@ -1,0 +1,2034 @@
+<!DOCTYPE html>
+<html lang="ru" class="is-loading" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4f9bd9" id="themeMeta">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Чат Тюленчика">
+<title>Чат Тюленчика</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Цвета: светлая и тёмная (тёмно-синяя) темы ---------- */
+  :root {
+    --bg-base: #4a92cc;
+    --bg-grad: linear-gradient(120deg, #3b86c6, #4f9bd9, #3a7cbc, #5fb0e6, #4288cb, #3d8ac8);
+    --card-bg: rgba(255, 255, 255, .16);
+    --sheet-bg: rgba(40, 110, 200, .55);
+    --field-bg: rgba(255, 255, 255, .14);
+    --bubble-bg: linear-gradient(160deg, #ffffff 0%, #f4fbff 42%, #cdeeff 100%);
+    --bubble-text: #0b3d74;
+    --bubble-line: rgba(11, 61, 116, .35);
+    --bubble-border: rgba(255, 255, 255, .95);
+    --bubble-glow: rgba(120, 200, 255, .35);
+    --chip-bg: rgba(255, 255, 255, .75);
+    --chip-border: #5aaee6;
+    --chip-text: #0b3d74;
+    --dock-bg: linear-gradient(165deg, rgba(255, 255, 255, .46), rgba(170, 225, 255, .14) 42%, rgba(255, 255, 255, .26));
+    --btn-bg: #fff;
+    --btn-text: #1a6fc4;
+    --switch-off: rgba(255, 255, 255, .85);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html[data-theme="dark"] {
+    --bg-base: #0b1f3f;
+    --bg-grad: linear-gradient(120deg, #0b1f3f, #12305c, #0a1a36, #1a3d6e, #0d2249, #102a52);
+    --card-bg: rgba(120, 170, 255, .10);
+    --sheet-bg: rgba(12, 40, 85, .85);
+    --field-bg: rgba(120, 170, 255, .12);
+    --bubble-bg: linear-gradient(160deg, #1d3a6b 0%, #162d56 55%, #10234a 100%);
+    --bubble-text: #eaf4ff;
+    --bubble-line: rgba(234, 244, 255, .3);
+    --bubble-border: rgba(150, 200, 255, .55);
+    --bubble-glow: rgba(90, 160, 255, .25);
+    --chip-bg: rgba(30, 60, 110, .8);
+    --chip-border: #4f8fd6;
+    --chip-text: #eaf4ff;
+    --dock-bg: linear-gradient(165deg, rgba(30, 70, 130, .55), rgba(10, 30, 70, .35) 45%, rgba(30, 70, 130, .5));
+    --btn-bg: #1d4f9c;
+    --btn-text: #fff;
+    --switch-off: rgba(200, 220, 255, .55);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { height: 100%; background: var(--bg-base); }
+
+  body {
+    font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #fff;
+    overflow: hidden;
+    height: 100%;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Фон на весь экран, включая область под статус-баром */
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    top: 0; right: 0; bottom: 0; left: 0;
+    pointer-events: none;
+  }
+  body::before {
+    z-index: -2;
+    background: var(--bg-grad);
+    background-size: 300% 300%;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  body::after {
+    z-index: -1;
+    background:
+      radial-gradient(circle at 30% 28%, rgba(190, 236, 255, .30), transparent 42%),
+      radial-gradient(circle at 72% 74%, rgba(20, 70, 150, .30), transparent 48%);
+    background-size: 160% 160%;
+    animation: bloom 24s ease-in-out infinite alternate;
+  }
+  html[data-theme="dark"] body::after {
+    background:
+      radial-gradient(circle at 30% 28%, rgba(60, 120, 220, .20), transparent 42%),
+      radial-gradient(circle at 72% 74%, rgba(5, 15, 40, .45), transparent 48%);
+  }
+  @keyframes drift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 40%; }
+    100% { background-position: 60% 100%; }
+  }
+  @keyframes bloom {
+    0%   { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50%      { transform: translateY(-10px) rotate(3deg); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(.92); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ---------- Загрузка ---------- */
+  #loader {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    background: var(--bg-grad);
+    transition: opacity .6s ease, visibility .6s ease;
+  }
+  #loader.hide { opacity: 0; visibility: hidden; }
+  #loader .seal-l {
+    font-size: clamp(64px, 22vw, 88px);
+    line-height: 1;
+    filter: drop-shadow(0 12px 14px rgba(0, 30, 70, .35));
+    animation: bob 2.4s ease-in-out infinite;
+  }
+  html.is-loading .screen,
+  html.is-loading .screen.active,
+  html.is-loading .dock { opacity: 0; visibility: hidden; }
+
+  /* ---------- Экраны: одна колонка по центру на любом устройстве ---------- */
+  .screen {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: min(100%, 480px);
+    padding: calc(var(--safe-top) + 28px) 22px calc(var(--safe-bottom) + 150px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, 14px);
+    transition: opacity .45s ease, transform .45s ease, visibility .45s;
+    -webkit-user-select: text;
+    user-select: text;
+    scrollbar-width: none;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+  .screen.active { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+  .hidden { display: none !important; }
+
+  .round-btn {
+    flex: 0 0 auto;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    background: rgba(255, 255, 255, .22);
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 5px 0 rgba(0, 30, 70, .18);
+    transition: transform .15s ease;
+  }
+  .round-btn:active { transform: scale(.94); }
+  .head-row { display: flex; justify-content: flex-end; align-items: center; min-height: 52px; width: 100%; }
+
+  /* Кнопка «написать»: серая и недоступная после публикации */
+  .limit-pill {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 52px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 3px solid #dfe5ec;
+    background: #8e97a3;
+    color: #f4f6f9;
+    font: 900 14px "Nunito", system-ui, sans-serif;
+    cursor: not-allowed;
+    box-shadow: 0 5px 0 rgba(0, 30, 70, .18);
+  }
+  .limit-pill .lim-count {
+    background: rgba(255, 255, 255, .35);
+    border-radius: 999px;
+    padding: 2px 9px;
+  }
+  .limit-pill #limitTime { font-variant-numeric: tabular-nums; font-size: 13px; }
+
+  /* ---------- Приветствие ---------- */
+  #welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding-bottom: 150px;
+  }
+  #welcome h1 {
+    font-size: clamp(28px, 9.4vw, 58px);
+    font-weight: 900;
+    line-height: 1.02;
+    text-shadow: 0 4px 0 rgba(0, 40, 90, .22);
+    letter-spacing: .5px;
+  }
+  #welcome h1 .nowrap { white-space: nowrap; display: block; }
+  #welcome .sub {
+    margin-top: 18px;
+    font-size: clamp(18px, 5.6vw, 28px);
+    font-weight: 800;
+    line-height: 1.2;
+    text-shadow: 0 2px 0 rgba(0, 40, 90, .2);
+  }
+  #welcome .seal {
+    margin-top: 42px;
+    font-size: clamp(72px, 24vw, 104px);
+    line-height: 1;
+    filter: drop-shadow(0 12px 14px rgba(0, 30, 70, .35));
+    animation: bob 3.6s ease-in-out infinite;
+  }
+
+  /* ---------- Событие ---------- */
+  .event-title {
+    margin-top: 40px;
+    text-align: center;
+    font-size: clamp(24px, 7.4vw, 40px);
+    font-weight: 900;
+    line-height: 1.08;
+  }
+  .timer {
+    margin-top: clamp(28px, 7vh, 56px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: clamp(2px, 1.4vw, 6px);
+    font-variant-numeric: tabular-nums;
+  }
+  .timer .unit { display: flex; flex-direction: column; align-items: center; min-width: 0; flex: 1 1 0; }
+  .timer .num { font-size: clamp(34px, 11vw, 64px); font-weight: 900; line-height: 1; }
+  .timer .lbl { margin-top: 10px; font-size: clamp(13px, 4vw, 17px); font-weight: 900; }
+  .timer .sep { font-size: clamp(34px, 11vw, 64px); font-weight: 900; line-height: 1; margin-top: -2px; }
+  .event-date { margin-top: 44px; text-align: center; font-size: clamp(16px, 4.8vw, 20px); font-weight: 800; opacity: .85; }
+
+  /* ---------- Доска ---------- */
+  .feed { display: flex; flex-direction: column; gap: 22px; margin-top: 18px; }
+  .post { display: flex; flex-direction: column; gap: 6px; }
+  .post-row { display: flex; align-items: flex-end; gap: 12px; }
+  .avatar {
+    flex: 0 0 auto;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #dcdcdc center/cover no-repeat;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, .8);
+  }
+  .avatar.empty::before, .avatar.empty::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+  }
+  .avatar.empty::before { width: 18px; height: 18px; top: 8px; border-radius: 50%; }
+  .avatar.empty::after  { width: 32px; height: 16px; bottom: -4px; border-radius: 50% 50% 0 0; }
+
+  .bubble {
+    position: relative;
+    min-width: 0;
+    flex: 1 1 auto;
+    max-width: calc(100% - 60px);
+    padding: 12px 18px 18px;
+    border-radius: 26px;
+    border: 2.5px solid var(--bubble-border);
+    background: var(--bubble-bg);
+    color: var(--bubble-text);
+    box-shadow:
+      0 6px 0 rgba(0, 30, 70, .16),
+      inset 0 2px 0 rgba(255, 255, 255, .6),
+      inset 0 -12px 22px var(--bubble-glow);
+    -webkit-touch-callout: none;
+  }
+  .bubble .meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 7px;
+    border-bottom: 2px dashed var(--bubble-line);
+    margin-bottom: 10px;
+  }
+  .bubble .author { font-size: 16px; font-weight: 900; word-break: break-word; }
+  .bubble .date { flex: 0 0 auto; font-size: 13px; font-weight: 700; opacity: .75; white-space: nowrap; }
+  .bubble .text {
+    font-size: clamp(17px, 5vw, 21px);
+    font-weight: 700;
+    line-height: 1.3;
+    white-space: pre-wrap;
+    word-break: break-word;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .bubble .text b, .editor b { font-weight: 900; }
+  .bubble .text i, .editor i { font-style: italic; }
+  .bubble .text u, .editor u { text-decoration: underline; }
+  .bubble .text s, .editor s { text-decoration: line-through; }
+  .post-img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 18px;
+    margin-top: 10px;
+    border: 2px solid var(--bubble-line);
+  }
+  .reactions { display: flex; flex-wrap: wrap; gap: 8px; padding-left: 58px; align-items: center; }
+  .rx {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    border: 2px solid var(--chip-border);
+    background: var(--chip-bg);
+    color: var(--chip-text);
+    font: 900 15px "Nunito", system-ui, sans-serif;
+    cursor: pointer;
+    transition: transform .12s ease, background .2s ease;
+  }
+  .rx:active { transform: scale(.92); }
+  .rx .emo { font-size: 16px; }
+  .rx.on { background: #1a6fc4; color: #fff; border-color: #1a6fc4; }
+  .act {
+    padding: 4px 11px;
+    border-radius: 999px;
+    border: 2px solid var(--chip-border);
+    background: var(--chip-bg);
+    color: var(--chip-text);
+    font: 900 13px "Nunito", system-ui, sans-serif;
+    cursor: pointer;
+  }
+  .act.del { border-color: #d6264a; color: #d6264a; }
+  .act-wrap { margin-left: auto; display: flex; gap: 8px; }
+  .feed-empty { text-align: center; font-size: 20px; font-weight: 800; margin-top: 60px; }
+
+  /* Панель выбора реакции (по долгому нажатию) */
+  .picker {
+    position: fixed;
+    z-index: 45;
+    display: flex;
+    gap: 2px;
+    padding: 6px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .96);
+    border: 2px solid #5aaee6;
+    box-shadow: 0 10px 24px rgba(5, 30, 70, .35);
+    animation: pop .2s ease both;
+  }
+  html[data-theme="dark"] .picker { background: rgba(22, 45, 86, .97); border-color: #4f8fd6; }
+  .picker button {
+    width: 46px;
+    height: 46px;
+    border: none;
+    background: transparent;
+    font-size: 26px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: transform .12s ease, background .2s ease;
+  }
+  .picker button:active { transform: scale(.85); }
+  .picker button.sel { background: rgba(26, 111, 196, .25); box-shadow: inset 0 0 0 2px #1a6fc4; }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    top: calc(var(--safe-top) + 14px);
+    transform: translate(-50%, -20px);
+    z-index: 60;
+    width: max-content;
+    max-width: calc(100% - 40px);
+    padding: 10px 16px;
+    border-radius: 16px;
+    background: rgba(214, 38, 74, .9);
+    border: 2px solid #fff;
+    font-size: 15px;
+    font-weight: 900;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---------- Окна ---------- */
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(16px, var(--safe-top)) 16px max(16px, var(--safe-bottom));
+    background: rgba(5, 25, 60, .4);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .modal[hidden] { display: none; }
+  .sheet {
+    width: min(100%, 420px);
+    max-height: 100%;
+    overflow-y: auto;
+    background: var(--sheet-bg);
+    border: 2.5px solid rgba(255, 255, 255, .9);
+    border-radius: 28px;
+    padding: 22px;
+    box-shadow: 0 10px 0 rgba(0, 20, 50, .2);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    scrollbar-width: none;
+    animation: pop .3s ease both;
+  }
+  .sheet::-webkit-scrollbar { display: none; }
+  .sheet h3 { font-size: clamp(20px, 6vw, 24px); font-weight: 900; margin-bottom: 14px; text-align: center; }
+
+  .fmt-bar { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .fmt {
+    width: 42px;
+    height: 40px;
+    border-radius: 12px;
+    border: 2px solid #fff;
+    background: rgba(255, 255, 255, .18);
+    color: #fff;
+    font: 900 18px "Nunito", system-ui, sans-serif;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: transform .12s ease, background .2s ease;
+  }
+  .fmt:active { transform: scale(.9); background: rgba(255, 255, 255, .4); }
+  .fmt.b { font-weight: 900; }
+  .fmt.i { font-style: italic; }
+  .fmt.u { text-decoration: underline; }
+  .fmt.s { text-decoration: line-through; }
+  .fmt.photo { font-size: 18px; margin-left: auto; }
+
+  .editor {
+    width: 100%;
+    min-height: 150px;
+    max-height: 40dvh;
+    overflow-y: auto;
+    border: 2.5px dashed rgba(255, 255, 255, .9);
+    border-radius: 18px;
+    padding: 12px 14px;
+    font: 700 clamp(17px, 5vw, 19px)/1.3 "Nunito", system-ui, sans-serif;
+    color: #fff;
+    background: var(--field-bg);
+    outline: none;
+    white-space: pre-wrap;
+    word-break: break-word;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  .editor:focus { border-style: solid; }
+  .editor:empty::before { content: attr(data-placeholder); opacity: .7; }
+
+  .img-preview { position: relative; margin-top: 12px; }
+  .img-preview img { display: block; max-width: 100%; max-height: 180px; border-radius: 16px; border: 2px solid #fff; }
+  .img-preview .x {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background: rgba(0, 20, 50, .6);
+    color: #fff;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .field-label { display: block; font-size: 16px; font-weight: 900; margin: 14px 0 6px; }
+  .hint-note { font-size: 13px; font-weight: 800; opacity: .85; margin-top: 6px; line-height: 1.3; }
+
+  .tip {
+    margin: 10px auto 0;
+    max-width: 320px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .95);
+    color: #0b3d74;
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1.3;
+    text-align: center;
+    animation: pop .2s ease both;
+  }
+  .tip-foot { margin-top: 6px; font-size: 13px; font-style: italic; font-weight: 800; opacity: .85; }
+
+  /* ---------- Мессенджер ---------- */
+  #messenger { position: relative; text-align: center; height: 100%; }
+  #messenger > * { position: absolute; left: 0; right: 0; width: auto; margin: 0; }
+  #messenger .icons { top: 13vh; font-size: clamp(40px, 12vw, 72px); line-height: 1.1; filter: drop-shadow(0 8px 10px rgba(0, 30, 70, .3)); }
+  #messenger h2 {
+    top: 22vh;
+    font-size: clamp(30px, 10vw, 60px);
+    font-weight: 900;
+    line-height: 1.1;
+    text-shadow: 0 4px 0 rgba(0, 40, 90, .22);
+  }
+  #messenger p {
+    top: 40vh;
+    font-size: clamp(18px, 5.6vw, 34px);
+    font-weight: 900;
+    line-height: 1.3;
+    text-shadow: 0 2px 0 rgba(0, 40, 90, .2);
+  }
+  #messenger p.note { top: 63vh; }
+
+  /* ---------- Профиль и вход ---------- */
+  .block-title { font-size: clamp(22px, 6.5vw, 26px); font-weight: 900; text-align: center; margin-bottom: 14px; text-shadow: 0 3px 0 rgba(0, 40, 90, .2); }
+  .card {
+    width: 100%;
+    background: var(--card-bg);
+    border: 2.5px solid rgba(255, 255, 255, .9);
+    border-radius: 26px;
+    padding: 20px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 6px 0 rgba(0, 30, 70, .16);
+  }
+  .progress { font-size: 14px; font-weight: 900; opacity: .9; margin-bottom: 4px; }
+  .step-title { font-size: clamp(20px, 6vw, 22px); font-weight: 900; margin-bottom: 4px; }
+  .small { font-size: 13px; font-weight: 800; opacity: .85; margin-top: 6px; line-height: 1.3; }
+
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 16px; }
+  .tab-auth {
+    font: 900 clamp(15px, 4.4vw, 17px) "Nunito", system-ui, sans-serif;
+    color: #fff;
+    background: rgba(255, 255, 255, .12);
+    border: 2.5px solid rgba(255, 255, 255, .7);
+    border-radius: 18px;
+    padding: 12px 8px;
+    cursor: pointer;
+  }
+  .tab-auth.on { background: var(--btn-bg); color: var(--btn-text); }
+
+  .fl-row { display: flex; align-items: center; gap: 8px; margin: 14px 0 6px; }
+  .fl-row .fl-text { font-size: 16px; font-weight: 900; flex: 1 1 auto; }
+  .tg-ico { width: 24px; height: 24px; object-fit: contain; border-radius: 6px; pointer-events: none; flex: 0 0 auto; }
+  .qbtn {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background: #fff;
+    color: #1a6fc4;
+    font: 900 16px "Nunito", system-ui, sans-serif;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+  .bang {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    color: #d6264a;
+    font-size: 15px;
+    font-weight: 900;
+    flex: 0 0 auto;
+  }
+  .tg-warn {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(214, 38, 74, .32);
+    border: 2px solid rgba(255, 255, 255, .85);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+  .tg-warn a { color: #fff; font-weight: 900; text-decoration: underline; }
+  .tg-warn .bang { margin-top: 1px; }
+
+  input[type=text] {
+    width: 100%;
+    font: 800 18px "Nunito", system-ui, sans-serif;
+    color: #fff;
+    background: var(--field-bg);
+    border: 2.5px dashed rgba(255, 255, 255, .85);
+    border-radius: 16px;
+    padding: 12px 14px;
+    outline: none;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  input[type=text]::placeholder { color: rgba(255, 255, 255, .7); }
+  input[type=text]:focus { border-style: solid; }
+
+  .btn {
+    width: 100%;
+    margin-top: 16px;
+    font: 900 clamp(16px, 4.8vw, 18px) "Nunito", system-ui, sans-serif;
+    color: var(--btn-text);
+    background: var(--btn-bg);
+    border: 2.5px solid #fff;
+    border-radius: 18px;
+    padding: 14px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 rgba(0, 20, 50, .22);
+  }
+  .btn:active { transform: translateY(2px); box-shadow: 0 3px 0 rgba(0, 20, 50, .22); }
+  .btn.ghost { background: rgba(255, 255, 255, .14); color: #fff; }
+  .btn:disabled { opacity: .6; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .err {
+    color: #fff;
+    background: rgba(200, 30, 60, .5);
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin-top: 12px;
+    font-weight: 800;
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .photo-pick {
+    width: min(170px, 46vw);
+    height: min(170px, 46vw);
+    border-radius: 50%;
+    margin: 14px auto 0;
+    border: 3px dashed #fff;
+    background: rgba(255, 255, 255, .14) center/cover no-repeat;
+    display: grid; place-items: center;
+    cursor: pointer;
+    font-size: 44px;
+    overflow: hidden;
+  }
+  .photo-pick.has { border-style: solid; }
+
+  #waitBox { text-align: center; }
+  .spinner { font-size: 56px; margin: 10px 0; display: inline-block; animation: spin 2.4s linear infinite; }
+  .wait-text { font-size: 19px; font-weight: 900; line-height: 1.35; }
+
+  .profile { text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .photo {
+    width: min(160px, 42vw);
+    height: min(160px, 42vw);
+    border-radius: 50%;
+    margin: 6px auto 0;
+    border: 3px solid #fff;
+    background: #dadada center/cover no-repeat;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: 0 10px 22px rgba(0, 30, 70, .25);
+  }
+  .photo.empty::before, .photo.empty::after {
+    content: ""; position: absolute; left: 50%; transform: translateX(-50%); background: #fff;
+  }
+  .photo.empty::before { width: 40%; height: 40%; border-radius: 50%; top: 14%; }
+  .photo.empty::after  { width: 70%; height: 38%; border-radius: 50% 50% 0 0; bottom: -8%; }
+  .p-name { font-size: clamp(24px, 7.5vw, 30px); font-weight: 900; margin-top: 16px; line-height: 1.1; }
+  .app-line { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; font-size: clamp(18px, 5.5vw, 22px); font-weight: 900; }
+  .app-ico { width: 30px; height: 30px; object-fit: contain; }
+  .app-cap { font-size: 13px; font-weight: 800; opacity: .85; margin-top: 2px; }
+  .p-row { font-size: 17px; font-weight: 800; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+  .p-row b { font-weight: 900; }
+
+  .settings { margin-top: 30px; display: grid; grid-template-columns: auto auto; column-gap: 22px; row-gap: 26px; align-items: center; justify-content: center; }
+  .setting { display: contents; }
+  .setting span { font-size: clamp(20px, 6vw, 30px); font-weight: 900; text-align: left; }
+  .switch {
+    flex: 0 0 auto;
+    width: clamp(92px, 28vw, 110px);
+    height: 64px;
+    border-radius: 40px;
+    border: none;
+    background: var(--switch-off);
+    position: relative;
+    cursor: pointer;
+    box-shadow: inset 0 3px 6px rgba(0, 20, 50, .18);
+    transition: background .3s ease;
+  }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 6px; left: 6px;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 3px 8px rgba(0, 20, 50, .3);
+    transition: transform .3s cubic-bezier(.3, 1.3, .5, 1);
+  }
+  .switch.on { background: #4f74d9; }
+  .switch.on::after { transform: translateX(calc(clamp(92px, 28vw, 110px) - 64px)); }
+
+  /* ---------- Шкала (liquid glass) ---------- */
+  .dock {
+    position: fixed;
+    left: 50%;
+    bottom: calc(var(--safe-bottom) + 14px);
+    transform: translateX(-50%);
+    width: min(92vw, 440px);
+    height: clamp(88px, 13vh, 102px);
+    padding: 8px;
+    border-radius: 36px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    z-index: 20;
+    touch-action: none;
+    cursor: grab;
+    outline: none;
+    background: var(--dock-bg);
+    backdrop-filter: blur(20px) saturate(190%);
+    -webkit-backdrop-filter: blur(20px) saturate(190%);
+    border: 1.5px solid rgba(255, 255, 255, .6);
+    box-shadow:
+      inset 0 2px 1px rgba(255, 255, 255, .75),
+      inset 0 -12px 24px rgba(120, 200, 255, .28),
+      inset 2px 0 6px rgba(255, 255, 255, .25),
+      inset -2px 0 6px rgba(255, 255, 255, .25),
+      0 20px 40px rgba(5, 30, 70, .35);
+    transition: transform .35s cubic-bezier(.3, 1.3, .5, 1), box-shadow .3s ease, opacity .6s ease;
+  }
+  .dock.pressed { transform: translateX(-50%) scale(1.03); cursor: grabbing; }
+  .dock::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(120% 70% at 18% 0%, rgba(255, 255, 255, .6), transparent 55%);
+    pointer-events: none;
+  }
+  .lens {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    left: 8px;
+    width: calc((100% - 16px) / 4);
+    border-radius: 28px;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(circle at 32% 18%, rgba(255, 255, 255, .95), rgba(255, 255, 255, .3) 55%, rgba(190, 235, 255, .42));
+    box-shadow:
+      inset 0 2px 2px #fff,
+      inset 0 -8px 14px rgba(110, 195, 255, .55),
+      inset 0 0 0 1px rgba(255, 255, 255, .5),
+      0 8px 16px rgba(0, 40, 90, .22);
+    transition: transform .5s cubic-bezier(.25, 1.25, .45, 1), opacity .3s ease, box-shadow .3s ease;
+  }
+  html[data-theme="dark"] .lens {
+    background: radial-gradient(circle at 32% 18%, rgba(160, 200, 255, .55), rgba(90, 140, 220, .3) 55%, rgba(40, 90, 170, .4));
+  }
+  .lens.dragging { transition: opacity .3s ease, box-shadow .3s ease; }
+  .dock.pressed .lens {
+    box-shadow:
+      inset 0 3px 3px #fff,
+      inset 0 -10px 18px rgba(110, 195, 255, .7),
+      inset 0 0 0 1px rgba(255, 255, 255, .7),
+      0 14px 26px rgba(0, 40, 90, .3);
+  }
+  .tab {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border-radius: 28px;
+    cursor: pointer;
+    min-width: 0;
+  }
+  .tab img {
+    height: clamp(40px, 6.6vh, 50px);
+    width: auto;
+    max-width: 92%;
+    object-fit: contain;
+    pointer-events: none;
+    filter: drop-shadow(0 3px 4px rgba(0, 30, 60, .25));
+    transition: transform .35s cubic-bezier(.3, 1.4, .5, 1);
+  }
+  .tab img.broken { display: none; }
+  .tab .fb {
+    display: none;
+    height: 50px;
+    line-height: 50px;
+    font-size: 36px;
+    filter: drop-shadow(0 3px 4px rgba(0, 30, 60, .25));
+    pointer-events: none;
+  }
+  .tab img.broken + .fb { display: block; }
+  .tab.active img { transform: scale(1.08) translateY(-1px); }
+  .tab .label {
+    font-size: clamp(10.5px, 3vw, 12.5px);
+    font-weight: 900;
+    line-height: 1.05;
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 40, 100, .5);
+    pointer-events: none;
+    padding: 0 2px;
+  }
+  .tab.active .label { text-shadow: 0 1px 2px rgba(0, 60, 130, .45); }
+
+  :focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+  /* ---------- Адаптация под разные экраны ---------- */
+  @media (max-height: 700px) {
+    #welcome .seal { margin-top: 24px; }
+    .timer { margin-top: 24px; }
+    .event-date { margin-top: 24px; }
+    .screen { padding-bottom: calc(var(--safe-bottom) + 130px); }
+  }
+  @media (max-width: 360px) {
+    .screen { padding-left: 16px; padding-right: 16px; }
+    .bubble { max-width: calc(100% - 52px); }
+    .reactions { padding-left: 0; }
+    .timer .lbl { font-size: 12px; }
+  }
+  @media (orientation: landscape) and (max-height: 500px) {
+    .screen { padding-top: calc(var(--safe-top) + 10px); padding-bottom: calc(var(--safe-bottom) + 120px); }
+    #welcome h1 { font-size: 28px; }
+    #welcome .seal { font-size: 56px; margin-top: 16px; }
+    .dock { height: 84px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body::before, body::after, .seal, #loader .seal-l, .spinner { animation: none !important; }
+    .screen, .lens, .switch::after { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Загрузка -->
+<div id="loader" aria-label="Загрузка">
+  <div class="seal-l" aria-hidden="true">🦭</div>
+</div>
+
+<!-- Приветствие -->
+<section class="screen active" id="welcome" data-screen="welcome" aria-label="Приветствие">
+  <h1>
+    <span class="nowrap">ЭТО —</span>
+    <span class="nowrap">ЧАТ ТЮЛЕНЧИКА</span>
+  </h1>
+  <p class="sub">События и общение<br>в одном месте!</p>
+  <div class="seal" aria-hidden="true">🦭</div>
+</section>
+
+<!-- 1. Событие -->
+<section class="screen" data-screen="event" aria-label="Событие">
+  <h2 class="event-title">ДО СЛЕДУЮЩЕГО<br>СОБЫТИЯ:</h2>
+  <div class="timer">
+    <div class="unit"><span class="num" id="d">00</span><span class="lbl">Дней</span></div>
+    <span class="sep">|</span>
+    <div class="unit"><span class="num" id="h">00</span><span class="lbl">Часов</span></div>
+    <span class="sep">|</span>
+    <div class="unit"><span class="num" id="m">00</span><span class="lbl">Минут</span></div>
+    <span class="sep">|</span>
+    <div class="unit"><span class="num" id="s">00</span><span class="lbl">Секунд</span></div>
+  </div>
+  <p class="event-date" id="eventDate"></p>
+</section>
+
+<!-- 2. Доска объявлений -->
+<section class="screen" data-screen="board" aria-label="Доска объявлений">
+  <div class="head-row">
+    <button class="round-btn" id="writeBtn" type="button" aria-label="Написать объявление">📝</button>
+    <button class="limit-pill hidden" id="limitBtn" type="button" disabled aria-label="Лимит: одно объявление в день">
+      <span>📝</span>
+      <span class="lim-count">1/1</span>
+      <span id="limitTime">00:00:00</span>
+    </button>
+  </div>
+  <div class="feed" id="feed"></div>
+</section>
+
+<!-- 3. Мессенджер -->
+<section class="screen" data-screen="messenger" aria-label="Мессенджер">
+  <div id="messenger">
+    <div class="icons" aria-hidden="true">🕒💬🦭</div>
+    <h2>Мессенджер<br>скоро появится...</h2>
+    <p>Мы разрабатываем свой БЕЗОПАСНЫЙ мессенджер с необычными функциями, на это нужно некоторое время...</p>
+    <p class="note">Сейчас, группа доступна только в Телеграм и ВК</p>
+  </div>
+</section>
+
+<!-- 4. Профиль -->
+<section class="screen" data-screen="profile" aria-label="Профиль">
+
+  <!-- Вход и регистрация -->
+  <div id="authBlock" class="hidden">
+    <h2 class="block-title">Вход в Чат Тюленчика</h2>
+
+    <div class="tabs">
+      <button class="tab-auth on" id="tabReg" type="button">📝 Регистрация</button>
+      <button class="tab-auth" id="tabLogin" type="button">🚪 Вход</button>
+    </div>
+
+    <!-- Регистрация: 4 шага -->
+    <div class="card" id="regForm">
+      <div class="progress" id="stepInfo">Шаг 1 из 4</div>
+
+      <div data-step="1">
+        <div class="step-title">👤 Как вас зовут?</div>
+        <input type="text" id="regName" maxlength="30" placeholder="Имя">
+        <button class="btn" data-next="1" type="button">Дальше ➜</button>
+      </div>
+
+      <div data-step="2" class="hidden">
+        <div class="step-title">🏷️ Придумайте ЮЗ</div>
+        <input type="text" id="regApp" maxlength="20" placeholder="например, vika_mog">
+        <div class="hint-note">Латиница, цифры и _ (3–20 символов). Этот ЮЗ будет входить в Чат Тюленчика.</div>
+        <div class="row">
+          <button class="btn ghost" data-back="2" type="button">⬅ Назад</button>
+          <button class="btn" data-next="2" type="button">Дальше ➜</button>
+        </div>
+      </div>
+
+      <div data-step="3" class="hidden">
+        <div class="step-title">📷 Фото профиля</div>
+        <div class="photo-pick" id="regPhoto" role="button" tabindex="0">➕</div>
+        <input type="file" id="regFile" accept="image/*" class="hidden">
+        <div class="hint-note">Можно пропустить и поставить позже в профиле.</div>
+        <div class="row">
+          <button class="btn ghost" data-back="3" type="button">⬅ Назад</button>
+          <button class="btn" data-next="3" type="button">Дальше ➜</button>
+        </div>
+      </div>
+
+      <div data-step="4" class="hidden">
+        <div class="fl-row">
+          <img class="tg-ico" src="https://i.postimg.cc/26mY4rrc/IMG-1801.png" alt="">
+          <label class="fl-text" for="regTg">Telegram-username</label>
+          <button class="qbtn help-btn" data-tip="tgTip" type="button" aria-label="Подсказка" aria-expanded="false">?</button>
+        </div>
+        <div class="tip hidden" id="tgTip">Привязанный телеграм нужен для подтверждения входа<div class="tip-foot">Изменить нельзя</div></div>
+        <input type="text" id="regTg" maxlength="33" placeholder="@username">
+        <div class="tg-warn">
+          <span class="bang" aria-hidden="true">!</span>
+          <span>Перед отправкой перейдите к боту <a href="https://t.me/tulenchik_helper_bot" target="_blank" rel="noopener">@tulenchik_helper_bot</a> и нажмите /start, только после этого нажмите «Отправить»</span>
+        </div>
+        <div class="row">
+          <button class="btn ghost" data-back="4" type="button">⬅ Назад</button>
+          <button class="btn" id="regSend" type="button">Отправить</button>
+        </div>
+      </div>
+
+      <div id="regErr"></div>
+    </div>
+
+    <!-- Вход -->
+    <div class="card hidden" id="loginForm">
+      <label class="field-label" for="loginApp">🔑 Юзернейм Чата Тюленчика</label>
+      <input type="text" id="loginApp" maxlength="20" placeholder="например, vika_mog">
+      <button class="btn" id="loginBtn" type="button">✅ Подтвердить вход через Телеграм</button>
+      <div class="hint-note">Бот пришлёт запрос в ваш Telegram. Вход будет только после вашего подтверждения.</div>
+      <div class="tg-warn">
+        <span class="bang" aria-hidden="true">!</span>
+        <span>Перед входом перейдите к боту <a href="https://t.me/tulenchik_helper_bot" target="_blank" rel="noopener">@tulenchik_helper_bot</a> и нажмите /start, если раньше этого не делали</span>
+      </div>
+      <div id="loginErr"></div>
+    </div>
+
+    <!-- Ожидание кнопки в Telegram -->
+    <div class="card hidden" id="waitBox">
+      <div class="spinner" aria-hidden="true">⏳</div>
+      <div class="wait-text" id="waitText">Ждём подтверждения в Telegram</div>
+      <div class="hint-note">Откройте Telegram и нажмите кнопку от бота</div>
+      <button class="btn ghost" id="waitCancel" type="button">Отмена</button>
+    </div>
+  </div>
+
+  <!-- Профиль (после входа) -->
+  <div id="profileBlock" class="profile hidden">
+    <div class="head-row">
+      <button class="round-btn" id="editBtn" type="button" aria-label="Редактировать профиль">✏️</button>
+    </div>
+    <div class="photo empty" id="photo" role="button" tabindex="0" aria-label="Поменять фото"></div>
+    <input type="file" id="fileInput" accept="image/*" class="hidden">
+    <div class="p-name" id="pName"></div>
+    <div class="app-line">
+      <img class="app-ico" src="https://i.postimg.cc/50xwDQfv/IMG-5430.png" alt="">
+      <b id="pApp"></b>
+    </div>
+    <div class="app-cap">юзернейм</div>
+    <div class="p-row">
+      <img class="tg-ico" src="https://i.postimg.cc/26mY4rrc/IMG-1801.png" alt="">
+      <span>Telegram: <b id="pTg"></b></span>
+      <button class="qbtn help-btn" data-tip="profileTip" type="button" aria-label="Подсказка" aria-expanded="false">?</button>
+    </div>
+    <div class="tip hidden" id="profileTip">Привязанный телеграм нужен для подтверждения входа<div class="tip-foot">Изменить нельзя</div></div>
+
+    <h3 class="block-title" style="margin-top:36px">- НАСТРОЙКИ ПРИЛОЖЕНИЯ -</h3>
+    <div class="settings">
+      <div class="setting"><button class="switch" id="themeSwitch" role="switch" aria-checked="false" aria-label="Темная тема"></button><span>Темная тема</span></div>
+      <div class="setting"><button class="switch on" role="switch" aria-checked="true" aria-label="Уведомления"></button><span>Уведомления</span></div>
+      <div class="setting"><button class="switch on" role="switch" aria-checked="true" aria-label="Вибрация"></button><span>Вибрация</span></div>
+    </div>
+
+    <div style="width:100%;margin-top:30px"><button class="btn ghost" id="logoutBtn" type="button">Выйти</button></div>
+  </div>
+</section>
+
+<!-- Объявление: новое и изменение -->
+<div class="modal" id="modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <h3 id="sheetTitle">Новое объявление</h3>
+    <div class="fmt-bar">
+      <button class="fmt b" type="button" data-cmd="bold" aria-label="Жирный">B</button>
+      <button class="fmt i" type="button" data-cmd="italic" aria-label="Курсив">I</button>
+      <button class="fmt u" type="button" data-cmd="underline" aria-label="Подчёркнутый">U</button>
+      <button class="fmt s" type="button" data-cmd="strikeThrough" aria-label="Зачёркнутый">S</button>
+      <button class="fmt photo" type="button" id="photoBtn" aria-label="Добавить фото">🖼️</button>
+    </div>
+    <div class="editor" id="editor" contenteditable="true" data-placeholder="Напишите объявление. Выделите слово и нажмите кнопку, чтобы оформить текст"></div>
+    <input type="file" id="postFile" accept="image/*" class="hidden">
+    <div id="postImgWrap"></div>
+    <div id="postErr"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn ghost" id="cancelBtn" type="button">Отмена</button>
+      <button class="btn" id="saveBtn" type="button">Опубликовать</button>
+    </div>
+  </div>
+</div>
+
+<!-- Редактирование профиля -->
+<div class="modal" id="editModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <h3 id="editTitle">Редактирование</h3>
+
+    <label class="field-label" for="editName">👤 Имя</label>
+    <input type="text" id="editName" maxlength="30" placeholder="Имя">
+
+    <label class="field-label" for="editApp">
+      <img class="app-ico" src="https://i.postimg.cc/50xwDQfv/IMG-5430.png" alt="" style="width:22px;height:22px;vertical-align:middle">
+      ЮЗ чата
+    </label>
+    <input type="text" id="editApp" maxlength="20" placeholder="ЮЗ">
+    <div class="hint-note">Латиница, цифры и _ (3–20 символов)</div>
+
+    <div class="hint-note" style="margin-top:14px;text-align:center">📷 Фото: нажмите на фото в профиле</div>
+
+    <div id="editErr"></div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn ghost" id="editCancel" type="button">Отмена</button>
+      <button class="btn" id="editSave" type="button">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Шкала: зажмите и двигайте влево-вправо -->
+<nav class="dock" id="dock" role="tablist" aria-label="Разделы" tabindex="0">
+  <div class="lens" id="lens"></div>
+
+  <div class="tab" role="tab" data-index="0" data-normal="https://i.postimg.cc/wBhrR3FS/53A7E6DC-64AC-41C9-B50F-4D70069DBA06.png" data-selected="https://i.postimg.cc/PJDtKBW6/BD1FCBB2-FEF1-4384-B48A-BDAE88009142.png" aria-label="Событие">
+    <img src="https://i.postimg.cc/wBhrR3FS/53A7E6DC-64AC-41C9-B50F-4D70069DBA06.png" alt="">
+    <span class="fb">✦</span>
+    <span class="label">Событие</span>
+  </div>
+
+  <div class="tab" role="tab" data-index="1" data-normal="https://i.postimg.cc/DzqN4m59/B1DA9417-06A4-4F00-8C2C-AE40C1D36AAD.png" data-selected="https://i.postimg.cc/cH2xRsn9/10C7481F-EEC4-45DD-BF13-BB59763385EE.png" aria-label="Доска объявлений">
+    <img src="https://i.postimg.cc/DzqN4m59/B1DA9417-06A4-4F00-8C2C-AE40C1D36AAD.png" alt="">
+    <span class="fb">📋</span>
+    <span class="label">Доска Объявлений</span>
+  </div>
+
+  <div class="tab" role="tab" data-index="2" data-normal="https://i.postimg.cc/JhbFHtKF/AC715512-A513-4A47-AA9C-24CB2DD30D13.png" data-selected="https://i.postimg.cc/cHr1tKr8/CC7B63A2-BDE7-4D6F-A146-45FFDE39FE32.png" aria-label="Мессенджер">
+    <img src="https://i.postimg.cc/JhbFHtKF/AC715512-A513-4A47-AA9C-24CB2DD30D13.png" alt="">
+    <span class="fb">💬</span>
+    <span class="label">Мессенджер</span>
+  </div>
+
+  <div class="tab" role="tab" data-index="3" data-normal="https://i.postimg.cc/cJQzt6T2/5BA65541-C3A8-4547-9C91-FB472590B4E4.png" data-selected="https://i.postimg.cc/DZHvr2XD/16D84106-4F2F-4896-80B8-6F4D3CA1E47F.png" aria-label="Профиль">
+    <img src="https://i.postimg.cc/cJQzt6T2/5BA65541-C3A8-4547-9C91-FB472590B4E4.png" alt="">
+    <span class="fb">🦭</span>
+    <span class="label">Профиль</span>
+  </div>
+</nav>
+
+<script>
+(function () {
+  /* =========================================================
+     Адрес сервера (Cloudflare Worker)
+     ========================================================= */
+  const WORKER = 'https://tyulen-bot.markbartolomeev.workers.dev';
+  const TOKEN_KEY = 'tyulenchik.token.v2';
+  const THEME_KEY = 'tyulenchik.theme';
+  const TG_ICON = 'https://i.postimg.cc/26mY4rrc/IMG-1801.png';
+  const SEAL_ICON = 'https://i.postimg.cc/50xwDQfv/IMG-5430.png';
+  const APP_RE = /^[A-Za-z0-9_]{3,20}$/;
+  const TG_RE = /^[A-Za-z][A-Za-z0-9_]{4,31}$/;
+  const POLL_MS = 2000;
+  const WAIT_MS = 190000;
+  const REACTIONS = ['👍', '👎', '❤️', '🤬', '💩'];
+  const MAX_IMG_SIDE = 900;      // фото сжимаются до 900 пикселей
+  const MAX_IMG_BYTES = 700000;  // и не больше ~700 КБ
+  const $ = id => document.getElementById(id);
+
+  const html = document.documentElement;
+  const dock = $('dock');
+  const lens = $('lens');
+  const welcome = $('welcome');
+  const loader = $('loader');
+  const tabEls = Array.from(dock.querySelectorAll('.tab'));
+  const TABS = ['event', 'board', 'messenger', 'profile'];
+  const PAD = 8;
+
+  let current = -1;
+  let welcomeGone = false;
+  let dragging = false;
+  let ready = false;
+  let me = null;
+  let posts = [];
+  let limit = null;
+  let limitTimer = null;
+  let currentTab = 'reg';
+  let postImage = '';
+  let editingId = null;
+
+  const pad2 = n => String(n).padStart(2, '0');
+
+  /* ---------- Тема ---------- */
+  const themeMeta = $('themeMeta');
+  function applyTheme(dark) {
+    html.setAttribute('data-theme', dark ? 'dark' : 'light');
+    themeMeta.setAttribute('content', dark ? '#0b1f3f' : '#4f9bd9');
+    const sw = $('themeSwitch');
+    sw.classList.toggle('on', dark);
+    sw.setAttribute('aria-checked', String(dark));
+  }
+  function isDark() { return html.getAttribute('data-theme') === 'dark'; }
+  $('themeSwitch').addEventListener('click', () => {
+    const dark = !isDark();
+    applyTheme(dark);
+    try { localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); } catch (_) {}
+  });
+  try { applyTheme(localStorage.getItem(THEME_KEY) === 'dark'); } catch (_) {}
+
+  /* ---------- Сеть ---------- */
+  async function api(method, path, body, token) {
+    const headers = {};
+    if (body) headers['Content-Type'] = 'application/json';
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    const res = await fetch(WORKER + path, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    let data = {};
+    try { data = await res.json(); } catch (_) {}
+    return { ok: res.ok, status: res.status, data };
+  }
+
+  function getToken() { try { return localStorage.getItem(TOKEN_KEY); } catch (_) { return null; } }
+  function setToken(t) { try { localStorage.setItem(TOKEN_KEY, t); } catch (_) {} }
+  function clearToken() { try { localStorage.removeItem(TOKEN_KEY); } catch (_) {} }
+
+  function err(id, msg) { $(id).innerHTML = msg ? `<div class="err">${msg}</div>` : ''; }
+
+  let toastTimer = null;
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  async function fetchMe() {
+    const token = getToken();
+    if (!token) { me = null; return; }
+    try {
+      const r = await api('GET', '/me', null, token);
+      if (r.ok) me = r.data.user;
+      else { if (r.status === 401) clearToken(); me = null; }
+    } catch (_) { me = null; }
+  }
+
+  /* ---------- Загрузка: всё загрузить, потом показать ---------- */
+  const textureUrls = [];
+  tabEls.forEach(t => textureUrls.push(t.dataset.normal, t.dataset.selected));
+  textureUrls.push(TG_ICON, SEAL_ICON);
+
+  function loadImage(src) {
+    return new Promise(res => {
+      const im = new Image();
+      im.onload = im.onerror = () => res();
+      im.src = src;
+    });
+  }
+
+  const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+  const minDelay = new Promise(res => setTimeout(res, 700));
+  const hardTimeout = new Promise(res => setTimeout(res, 9000));
+  const everything = Promise.all([
+    Promise.all(textureUrls.map(loadImage)),
+    fontsReady,
+    minDelay,
+    fetchMe(),
+    loadBoard(),
+  ]);
+
+  Promise.race([everything, hardTimeout]).then(() => {
+    ready = true;
+    html.classList.remove('is-loading');
+    loader.classList.add('hide');
+    setTimeout(() => { loader.style.display = 'none'; }, 700);
+    refreshProfileUI();
+  });
+
+  /* ---------- Шкала ---------- */
+  tabEls.forEach(t => {
+    const img = t.querySelector('img');
+    img.addEventListener('error', () => img.classList.add('broken'));
+  });
+
+  function lensWidth() { return lens.offsetWidth; }
+  function placeLens(px) { lens.style.transform = `translateX(${px}px)`; }
+  function snapLens() {
+    if (current < 0) { lens.style.opacity = 0; return; }
+    lens.style.opacity = 1;
+    placeLens(current * lensWidth());
+  }
+
+  function setSection(i) {
+    if (i === current) return;
+    current = i;
+    if (!welcomeGone) {
+      welcomeGone = true;
+      welcome.remove();
+    }
+    document.querySelectorAll('.screen[data-screen]').forEach(s => {
+      s.classList.toggle('active', s.dataset.screen === TABS[i]);
+    });
+    tabEls.forEach((t, idx) => {
+      const on = idx === i;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', String(on));
+      const img = t.querySelector('img');
+      const src = on ? t.dataset.selected : t.dataset.normal;
+      if (img.getAttribute('src') !== src) img.setAttribute('src', src);
+    });
+    if (TABS[i] === 'board') loadBoard();
+    if (!dragging) snapLens();
+    else lens.style.opacity = 1;
+  }
+
+  function followFinger(clientX) {
+    const x = clientX - dock.getBoundingClientRect().left;
+    const w = lensWidth();
+    const p = Math.min(3 * w, Math.max(0, x - PAD - w / 2));
+    placeLens(p);
+    setSection(Math.min(3, Math.max(0, Math.round(p / w))));
+  }
+
+  dock.addEventListener('pointerdown', e => {
+    if (!ready) return;
+    dragging = true;
+    dock.setPointerCapture(e.pointerId);
+    dock.classList.add('pressed');
+    lens.classList.add('dragging');
+    followFinger(e.clientX);
+  });
+  dock.addEventListener('pointermove', e => { if (dragging) followFinger(e.clientX); });
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    dock.classList.remove('pressed');
+    lens.classList.remove('dragging');
+    snapLens();
+  }
+  dock.addEventListener('pointerup', endDrag);
+  dock.addEventListener('pointercancel', endDrag);
+  dock.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') setSection(Math.min(3, current + 1));
+    if (e.key === 'ArrowLeft') setSection(Math.max(0, current < 0 ? 0 : current - 1));
+  });
+  window.addEventListener('resize', () => { if (!dragging) snapLens(); });
+
+  /* ---------- Отсчёт до 1 декабря ---------- */
+  const dEl = $('d'), hEl = $('h'), mEl = $('m'), sEl = $('s');
+  const dateEl = $('eventDate');
+
+  function nextDecemberFirst(now) {
+    let t = new Date(now.getFullYear(), 11, 1, 0, 0, 0);
+    if (t <= now) t = new Date(now.getFullYear() + 1, 11, 1, 0, 0, 0);
+    return t;
+  }
+  let target = nextDecemberFirst(new Date());
+  dateEl.textContent = `1 декабря ${target.getFullYear()}`;
+
+  function tick() {
+    const now = new Date();
+    if (now >= target) target = nextDecemberFirst(now);
+    let diff = Math.max(0, target - now);
+    const days = Math.floor(diff / 86400000); diff -= days * 86400000;
+    const hours = Math.floor(diff / 3600000); diff -= hours * 3600000;
+    const mins = Math.floor(diff / 60000); diff -= mins * 60000;
+    const secs = Math.floor(diff / 1000);
+    dEl.textContent = pad2(days);
+    hEl.textContent = pad2(hours);
+    mEl.textContent = pad2(mins);
+    sEl.textContent = pad2(secs);
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  /* ---------- Безопасное форматирование текста ---------- */
+  // Оставляем только b, i, u, s и переносы строк; всё остальное удаляем
+  function sanitize(src) {
+    const map = { strong: 'b', b: 'b', em: 'i', i: 'i', u: 'u', strike: 's', s: 's', del: 's', br: 'br', div: 'div', p: 'div' };
+    let s = String(src || '').replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, (m, tag) => {
+      const t = map[tag.toLowerCase()];
+      if (!t) return '';
+      const closing = m.startsWith('</');
+      if (t === 'br') return '<br>';
+      if (t === 'div') return closing ? '<br>' : '';
+      return closing ? `</${t}>` : `<${t}>`;
+    });
+    s = s.replace(/<(?!\/?(b|i|u|s|br)>)/g, '&lt;');
+    return s.replace(/(<br>\s*)+$/, '');
+  }
+
+  function plainLength(htmlStr) {
+    const d = document.createElement('div');
+    d.innerHTML = htmlStr;
+    return d.textContent.trim().length;
+  }
+
+  /* ---------- Доска (хранится на сервере) ---------- */
+  const feed = $('feed');
+
+  function fmtDate(ts) {
+    const d = new Date(ts);
+    return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.${String(d.getFullYear()).slice(-2)}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+
+  async function loadBoard() {
+    try {
+      const r = await api('GET', '/board', null, getToken());
+      if (r.ok) {
+        posts = r.data.posts || [];
+        limit = r.data.limit || null;
+        renderFeed();
+        renderLimit();
+      }
+    } catch (_) {}
+  }
+
+  function renderFeed() {
+    feed.textContent = '';
+    if (!posts.length) {
+      const empty = document.createElement('p');
+      empty.className = 'feed-empty';
+      empty.textContent = 'Пока нет объявлений';
+      feed.append(empty);
+      return;
+    }
+    posts.forEach(p => {
+      const art = document.createElement('article');
+      art.className = 'post';
+
+      const row = document.createElement('div');
+      row.className = 'post-row';
+
+      const av = document.createElement('div');
+      av.className = 'avatar' + (p.avatar ? '' : ' empty');
+      if (p.avatar) av.style.backgroundImage = `url("${p.avatar}")`;
+
+      const bub = document.createElement('div');
+      bub.className = 'bubble';
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const au = document.createElement('span');
+      au.className = 'author';
+      au.textContent = p.author;
+      const dt = document.createElement('span');
+      dt.className = 'date';
+      dt.textContent = fmtDate(p.date);
+      meta.append(au, dt);
+
+      const tx = document.createElement('div');
+      tx.className = 'text';
+      tx.innerHTML = sanitize(p.text);
+
+      bub.append(meta, tx);
+      if (p.image && p.image.startsWith('data:image/')) {
+        const img = document.createElement('img');
+        img.className = 'post-img';
+        img.alt = '';
+        img.src = p.image;
+        bub.append(img);
+      }
+      row.append(av, bub);
+
+      const rx = document.createElement('div');
+      rx.className = 'reactions';
+      REACTIONS.forEach(emo => {
+        if (!(p.reactions && p.reactions[emo])) return;
+        const mine = !!(p.mine && p.mine.includes(emo));
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'rx' + (mine ? ' on' : '');
+        chip.setAttribute('aria-label', mine ? `Убрать реакцию ${emo}` : `Реакция ${emo}`);
+        const e = document.createElement('span');
+        e.className = 'emo';
+        e.textContent = emo;
+        const c = document.createElement('span');
+        c.textContent = p.reactions[emo];
+        chip.append(e, c);
+        // Нажатие по своей реакции её убирает
+        chip.addEventListener('click', () => { if (mine) react(p.id, emo); });
+        rx.append(chip);
+      });
+
+      // Изменить и удалить — только свои объявления
+      if (p.own) {
+        const wrap = document.createElement('div');
+        wrap.className = 'act-wrap';
+        const edit = document.createElement('button');
+        edit.type = 'button';
+        edit.className = 'act';
+        edit.textContent = '✏️ Изменить';
+        edit.addEventListener('click', () => openEditor(p));
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'act del';
+        del.textContent = '🗑️ Удалить';
+        del.addEventListener('click', () => removePost(p));
+        wrap.append(edit, del);
+        rx.append(wrap);
+      }
+
+      bindPress(bub, p);
+      art.append(row, rx);
+      feed.append(art);
+    });
+  }
+
+  /* ---------- Лимит: одно объявление в день ---------- */
+  function renderLimit() {
+    const writeBtn = $('writeBtn');
+    const pill = $('limitBtn');
+    const blocked = !!(me && limit && limit.used >= limit.max);
+    writeBtn.classList.toggle('hidden', blocked);
+    pill.classList.toggle('hidden', !blocked);
+    clearInterval(limitTimer);
+    if (!blocked) return;
+
+    const update = () => {
+      const left = Math.max(0, limit.resetAt - Date.now());
+      const s = Math.floor(left / 1000);
+      $('limitTime').textContent = `${pad2(Math.floor(s / 3600))}:${pad2(Math.floor((s % 3600) / 60))}:${pad2(s % 60)}`;
+      if (left <= 0) {
+        clearInterval(limitTimer);
+        limit = null;
+        loadBoard();
+      }
+    };
+    update();
+    limitTimer = setInterval(update, 1000);
+  }
+
+  $('writeBtn').addEventListener('click', () => {
+    if (!getToken() || !me) return toast('Войдите в профиль, чтобы писать объявления');
+    openEditor(null);
+  });
+
+  /* ---------- Реакции ---------- */
+  async function react(id, emoji) {
+    const token = getToken();
+    if (!token || !me) return toast('Войдите в профиль, чтобы ставить реакции');
+    try {
+      const r = await api('POST', '/board/react', { id, emoji }, token);
+      if (r.ok) { posts = r.data.posts; limit = r.data.limit || limit; renderFeed(); return; }
+      if (r.status === 401) return toast('Войдите в профиль, чтобы ставить реакции');
+      toast(r.data.error || 'Не получилось поставить реакцию');
+    } catch (_) {
+      toast('Нет связи с сервером');
+    }
+  }
+
+  // Выбрать реакцию: та же — убрать; другая — заменить
+  async function chooseReaction(postId, emoji) {
+    const p = posts.find(x => x.id === postId);
+    const mine = (p && p.mine) || [];
+    if (mine.includes(emoji)) return react(postId, emoji);
+    for (const old of mine) await react(postId, old);
+    await react(postId, emoji);
+  }
+
+  /* Панель реакций по долгому нажатию */
+  const picker = document.createElement('div');
+  picker.className = 'picker hidden';
+  REACTIONS.forEach(emo => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = emo;
+    b.dataset.emo = emo;
+    b.setAttribute('aria-label', 'Реакция ' + emo);
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = picker.dataset.postId;
+      hidePicker();
+      if (id) chooseReaction(id, emo);
+    });
+    picker.append(b);
+  });
+  document.body.append(picker);
+
+  function hidePicker() { picker.classList.add('hidden'); }
+
+  function showPicker(bubbleEl, post) {
+    picker.dataset.postId = post.id;
+    const mine = post.mine || [];
+    picker.querySelectorAll('button').forEach(b => {
+      b.classList.toggle('sel', mine.includes(b.dataset.emo));
+    });
+    picker.classList.remove('hidden');
+    const r = bubbleEl.getBoundingClientRect();
+    const pw = picker.offsetWidth;
+    const ph = picker.offsetHeight;
+    let left = r.left + r.width / 2 - pw / 2;
+    left = Math.max(10, Math.min(window.innerWidth - pw - 10, left));
+    let top = r.top - ph - 10;
+    if (top < 10) top = r.bottom + 10;
+    picker.style.left = left + 'px';
+    picker.style.top = top + 'px';
+    if (navigator.vibrate) navigator.vibrate(12);
+  }
+
+  function bindPress(el, post) {
+    let timer = null;
+    let sx = 0, sy = 0;
+    const cancel = () => { clearTimeout(timer); timer = null; };
+    el.addEventListener('pointerdown', e => {
+      sx = e.clientX;
+      sy = e.clientY;
+      cancel();
+      timer = setTimeout(() => {
+        timer = null;
+        if (!getToken() || !me) return toast('Войдите в профиль, чтобы ставить реакции');
+        showPicker(el, post);
+      }, 450);
+    });
+    el.addEventListener('pointermove', e => {
+      if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) cancel();
+    });
+    el.addEventListener('pointerup', cancel);
+    el.addEventListener('pointercancel', cancel);
+    el.addEventListener('pointerleave', cancel);
+    el.addEventListener('contextmenu', e => e.preventDefault());
+  }
+
+  document.addEventListener('pointerdown', e => {
+    if (!picker.classList.contains('hidden') && !picker.contains(e.target)) hidePicker();
+  });
+
+  /* ---------- Удаление своего объявления ---------- */
+  async function removePost(p) {
+    if (!window.confirm('Удалить объявление?')) return;
+    try {
+      const r = await api('POST', '/board/delete', { id: p.id }, getToken());
+      if (r.ok) {
+        posts = r.data.posts;
+        limit = r.data.limit || limit;
+        renderFeed();
+        toast('🗑️ Объявление удалено');
+      } else if (r.status === 401) {
+        toast('Сессия закончилась, войдите снова');
+      } else {
+        toast(r.data.error || 'Не получилось удалить');
+      }
+    } catch (_) {
+      toast('Нет связи с сервером');
+    }
+  }
+
+  /* ---------- Окно объявления: новое или изменение ---------- */
+  const modal = $('modal');
+  const editor = $('editor');
+
+  function resizeImage(file, cb) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, MAX_IMG_SIDE / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * k);
+        c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        let quality = 0.8;
+        let data = c.toDataURL('image/jpeg', quality);
+        // Если всё ещё велико, сжимаем сильнее
+        while (data.length > MAX_IMG_BYTES * 1.37 && quality > 0.4) {
+          quality -= 0.1;
+          data = c.toDataURL('image/jpeg', quality);
+        }
+        cb(data);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function renderPostImage() {
+    const wrap = $('postImgWrap');
+    wrap.textContent = '';
+    if (!postImage) return;
+    const box = document.createElement('div');
+    box.className = 'img-preview';
+    const img = document.createElement('img');
+    img.src = postImage;
+    img.alt = '';
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'x';
+    x.textContent = '×';
+    x.setAttribute('aria-label', 'Убрать фото');
+    x.addEventListener('click', () => { postImage = ''; renderPostImage(); });
+    box.append(img, x);
+    wrap.append(box);
+  }
+
+  function openEditor(p) {
+    editingId = p ? p.id : null;
+    $('sheetTitle').textContent = p ? 'Изменить объявление' : 'Новое объявление';
+    $('saveBtn').textContent = p ? 'Сохранить' : 'Опубликовать';
+    editor.innerHTML = p ? sanitize(p.text) : '';
+    postImage = p && p.image ? p.image : '';
+    renderPostImage();
+    err('postErr', '');
+    modal.hidden = false;
+    setTimeout(() => editor.focus(), 50);
+  }
+
+  // Кнопки форматирования не забирают выделение текста
+  document.querySelectorAll('.fmt[data-cmd]').forEach(btn => {
+    btn.addEventListener('pointerdown', e => e.preventDefault());
+    btn.addEventListener('click', () => {
+      editor.focus();
+      document.execCommand(btn.dataset.cmd, false, null);
+    });
+  });
+
+  $('photoBtn').addEventListener('pointerdown', e => e.preventDefault());
+  $('photoBtn').addEventListener('click', () => $('postFile').click());
+  $('postFile').addEventListener('change', () => {
+    const f = $('postFile').files[0];
+    $('postFile').value = '';
+    resizeImage(f, data => {
+      postImage = data;
+      renderPostImage();
+    });
+  });
+
+  function closeModal() { modal.hidden = true; editingId = null; }
+  $('cancelBtn').addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+  $('saveBtn').addEventListener('click', async () => {
+    const text = sanitize(editor.innerHTML);
+    if (!plainLength(text) && !postImage) return err('postErr', '✏️ Напишите текст или добавьте фото');
+    if (plainLength(text) > 2000) return err('postErr', '✏️ Текст слишком длинный');
+
+    // Новое объявление: если лимит исчерпан, не отправляем
+    if (!editingId && limit && limit.used >= limit.max) {
+      return err('postErr', '⏳ Сегодня уже было опубликовано объявление. Следующее можно завтра');
+    }
+
+    $('saveBtn').disabled = true;
+    err('postErr', '');
+    try {
+      const path = editingId ? '/board/edit' : '/board';
+      const body = editingId
+        ? { id: editingId, text, image: postImage }
+        : { text, image: postImage };
+      const r = await api('POST', path, body, getToken());
+      if (r.ok) {
+        posts = r.data.posts;
+        limit = r.data.limit || limit;
+        renderFeed();
+        renderLimit();
+        closeModal();
+        if (!editingId) {
+          const board = document.querySelector('.screen[data-screen="board"]');
+          board.scrollTop = board.scrollHeight;
+        }
+      } else if (r.status === 401) {
+        toast('Сессия закончилась, войдите снова');
+      } else if (r.status === 413) {
+        err('postErr', '📷 Фото слишком большое. Выберите другое или меньшее по размеру');
+      } else {
+        err('postErr', '⚠️ ' + (r.data.error || 'Не получилось сохранить'));
+      }
+    } catch (_) {
+      err('postErr', '📡 Нет связи с сервером, попробуйте позже');
+    } finally {
+      $('saveBtn').disabled = false;
+    }
+  });
+
+  /* ---------- Ожидание кнопки в Telegram ---------- */
+  let cancelWait = null;
+
+  function showWait(text) {
+    $('waitText').textContent = text;
+    $('authBlock').querySelectorAll('.tabs, #regForm, #loginForm').forEach(el => el.classList.add('hidden'));
+    $('waitBox').classList.remove('hidden');
+  }
+  function hideWait() {
+    $('waitBox').classList.add('hidden');
+    $('authBlock').querySelectorAll('.tabs').forEach(el => el.classList.remove('hidden'));
+    showTab(currentTab);
+    cancelWait = null;
+  }
+  $('waitCancel').addEventListener('click', () => { if (cancelWait) cancelWait('cancelled'); });
+
+  function waitForConfirm(id) {
+    return new Promise(resolve => {
+      const started = Date.now();
+      const timer = setInterval(async () => {
+        if (Date.now() - started > WAIT_MS) return finish({ status: 'expired' });
+        try {
+          const r = await api('GET', '/status?id=' + encodeURIComponent(id));
+          if (r.ok && r.data.status !== 'pending') finish(r.data);
+        } catch (_) {}
+      }, POLL_MS);
+      function finish(result) {
+        clearInterval(timer);
+        cancelWait = null;
+        resolve(result);
+      }
+      cancelWait = status => finish({ status });
+    });
+  }
+
+  /* ---------- Профиль и состояние входа ---------- */
+  function renderProfile(u) {
+    $('pName').textContent = u.name;
+    $('pApp').textContent = u.app;
+    $('pTg').textContent = u.tg ? '@' + u.tg : '—';
+    $('photo').classList.toggle('empty', !u.avatar);
+    $('photo').style.backgroundImage = u.avatar ? `url("${u.avatar}")` : '';
+  }
+
+  function refreshProfileUI() {
+    if (me) {
+      $('authBlock').classList.add('hidden');
+      $('profileBlock').classList.remove('hidden');
+      renderProfile(me);
+    } else {
+      $('profileBlock').classList.add('hidden');
+      $('authBlock').classList.remove('hidden');
+      $('waitBox').classList.add('hidden');
+      $('authBlock').querySelectorAll('.tabs').forEach(el => el.classList.remove('hidden'));
+      showTab(currentTab);
+    }
+    renderLimit();
+  }
+
+  function handleResult(res, errId, expiredText) {
+    if (res.status === 'yes' && res.token) {
+      setToken(res.token);
+      me = res.user || null;
+      refreshProfileUI();
+      if (!me) fetchMe().then(refreshProfileUI);
+      loadBoard();
+      return;
+    }
+    if (res.status === 'no') err(errId, '🚫 Отменено в Telegram');
+    else if (res.status === 'expired') err(errId, expiredText);
+  }
+
+  /* ---------- Вкладки входа ---------- */
+  function showTab(which) {
+    currentTab = which;
+    const isReg = which === 'reg';
+    $('tabReg').classList.toggle('on', isReg);
+    $('tabLogin').classList.toggle('on', !isReg);
+    $('regForm').classList.toggle('hidden', !isReg);
+    $('loginForm').classList.toggle('hidden', isReg);
+    if (isReg) showStep(reg.step || 1);
+  }
+  $('tabReg').addEventListener('click', () => showTab('reg'));
+  $('tabLogin').addEventListener('click', () => showTab('login'));
+
+  /* ---------- Подсказки «?» (регистрация и профиль) ---------- */
+  function closeTips(except) {
+    document.querySelectorAll('.tip').forEach(t => {
+      if (t !== except) t.classList.add('hidden');
+    });
+    document.querySelectorAll('.help-btn').forEach(b => b.setAttribute('aria-expanded', 'false'));
+  }
+  document.querySelectorAll('.help-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const tip = $(btn.dataset.tip);
+      const wasOpen = !tip.classList.contains('hidden');
+      closeTips(null);
+      if (!wasOpen) {
+        tip.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+  document.addEventListener('pointerdown', e => {
+    if (e.target.closest && (e.target.closest('.help-btn') || e.target.closest('.tip'))) return;
+    closeTips(null);
+  });
+
+  /* ---------- Фото: квадрат, 256 пикселей ---------- */
+  function toSquareDataUrl(file, cb) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 256;
+        const side = Math.min(img.width, img.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        canvas.getContext('2d').drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
+        cb(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* ---------- Регистрация ---------- */
+  const reg = { step: 1, name: '', app: '', avatar: '' };
+  const TOTAL = 4;
+
+  function showStep(n) {
+    reg.step = n;
+    document.querySelectorAll('#regForm [data-step]').forEach(el => {
+      el.classList.toggle('hidden', Number(el.dataset.step) !== n);
+    });
+    $('stepInfo').textContent = `Шаг ${n} из ${TOTAL}`;
+    err('regErr', '');
+    const target = { 1: 'regName', 2: 'regApp', 4: 'regTg' }[n];
+    if (target) setTimeout(() => $(target).focus(), 30);
+  }
+
+  document.querySelectorAll('#regForm [data-next]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const n = Number(btn.dataset.next);
+      if (n === 1) {
+        const name = $('regName').value.trim();
+        if (!name) return err('regErr', '✏️ Напишите имя');
+        reg.name = name;
+      }
+      if (n === 2) {
+        const app = $('regApp').value.trim();
+        if (!APP_RE.test(app)) return err('regErr', '🏷️ ЮЗ: 3–20 символов, латиница, цифры или _');
+        reg.app = app;
+      }
+      showStep(n + 1);
+    });
+  });
+  document.querySelectorAll('#regForm [data-back]').forEach(btn => {
+    btn.addEventListener('click', () => showStep(Number(btn.dataset.back) - 1));
+  });
+
+  $('regPhoto').addEventListener('click', () => $('regFile').click());
+  $('regPhoto').addEventListener('keydown', e => { if (e.key === 'Enter') $('regFile').click(); });
+  $('regFile').addEventListener('change', () => {
+    const f = $('regFile').files[0];
+    $('regFile').value = '';
+    toSquareDataUrl(f, data => {
+      reg.avatar = data;
+      $('regPhoto').textContent = '';
+      $('regPhoto').classList.add('has');
+      $('regPhoto').style.backgroundImage = `url("${data}")`;
+    });
+  });
+
+  $('regSend').addEventListener('click', async () => {
+    const tg = $('regTg').value.trim().replace(/^@/, '');
+    if (!TG_RE.test(tg)) return err('regErr', '✈️ Telegram-username: 5–32 символов, начинается с буквы');
+
+    $('regSend').disabled = true;
+    err('regErr', '');
+    showWait('⏳ Отправляем запрос в Telegram...');
+    try {
+      const start = await api('POST', '/register/start', { name: reg.name, app: reg.app, tg, avatar: reg.avatar });
+      if (!start.ok) {
+        hideWait();
+        if (start.data.error === 'start_bot') {
+          err('regErr', '🤖 Сначала откройте @tulenchik_helper_bot, нажмите /start и попробуйте снова');
+        } else {
+          err('regErr', '⚠️ ' + (start.data.error || 'Ошибка, попробуйте позже'));
+        }
+        return;
+      }
+      showWait('⏳ Подтвердите создание аккаунта в Telegram');
+      const res = await waitForConfirm(start.data.id);
+      hideWait();
+      handleResult(res, 'regErr', '⏳ Время вышло, нажмите «Отправить» ещё раз');
+    } catch (_) {
+      hideWait();
+      err('regErr', '📡 Нет связи с сервером, попробуйте позже');
+    } finally {
+      $('regSend').disabled = false;
+    }
+  });
+
+  /* ---------- Вход ---------- */
+  $('loginBtn').addEventListener('click', async () => {
+    const app = $('loginApp').value.trim();
+    if (!APP_RE.test(app)) return err('loginErr', '🔍 Введите ЮЗ Чата Тюленчика');
+
+    $('loginBtn').disabled = true;
+    err('loginErr', '');
+    showWait('⏳ Отправляем запрос в Telegram...');
+    try {
+      const start = await api('POST', '/login/start', { app });
+      if (!start.ok) {
+        hideWait();
+        if (start.data.error === 'start_bot') {
+          err('loginErr', '🤖 Откройте @tulenchik_helper_bot, нажмите /start и попробуйте снова');
+        } else {
+          err('loginErr', '🔍 Такого ЮЗ нет. Сначала зарегистрируйтесь');
+        }
+        return;
+      }
+      showWait('⏳ Подтвердите вход в Telegram');
+      const res = await waitForConfirm(start.data.id);
+      hideWait();
+      handleResult(res, 'loginErr', '⏳ Время вышло, войдите снова');
+    } catch (_) {
+      hideWait();
+      err('loginErr', '📡 Нет связи с сервером, попробуйте позже');
+    } finally {
+      $('loginBtn').disabled = false;
+    }
+  });
+
+  /* ---------- Профиль: фото, редактирование, выход ---------- */
+  async function saveProfile(fields) {
+    const r = await api('POST', '/profile', fields, getToken());
+    if (r.ok) { me = r.data.user; renderProfile(me); loadBoard(); return { ok: true }; }
+    if (r.status === 401) { clearToken(); me = null; refreshProfileUI(); return { ok: false, msg: 'Сессия закончилась, войдите снова' }; }
+    return { ok: false, msg: r.data.error || 'Не удалось сохранить' };
+  }
+
+  $('logoutBtn').addEventListener('click', () => {
+    clearToken();
+    me = null;
+    limit = null;
+    showTab('reg');
+    refreshProfileUI();
+  });
+
+  $('photo').addEventListener('click', () => $('fileInput').click());
+  $('photo').addEventListener('keydown', e => { if (e.key === 'Enter') $('fileInput').click(); });
+  $('fileInput').addEventListener('change', () => {
+    const f = $('fileInput').files[0];
+    $('fileInput').value = '';
+    toSquareDataUrl(f, async data => {
+      const res = await saveProfile({ avatar: data });
+      if (!res.ok) toast(res.msg);
+    });
+  });
+
+  $('editBtn').addEventListener('click', () => {
+    if (!me) return;
+    $('editName').value = me.name;
+    $('editApp').value = me.app;
+    err('editErr', '');
+    $('editModal').hidden = false;
+  });
+  $('editCancel').addEventListener('click', () => { $('editModal').hidden = true; });
+  $('editModal').addEventListener('click', e => { if (e.target === $('editModal')) $('editModal').hidden = true; });
+
+  $('editSave').addEventListener('click', async () => {
+    const name = $('editName').value.trim();
+    const app = $('editApp').value.trim();
+    if (!name) return err('editErr', '✏️ Напишите имя');
+    if (!APP_RE.test(app)) return err('editErr', '🏷️ ЮЗ: 3–20 символов, латиница, цифры или _');
+
+    $('editSave').disabled = true;
+    const res = await saveProfile({ name, app });
+    $('editSave').disabled = false;
+    if (res.ok) {
+      $('editModal').hidden = true;
+      toast('✅ Сохранено');
+    } else {
+      err('editErr', '⚠️ ' + res.msg);
+    }
+  });
+
+  /* ---------- Остальные переключатели (визуальные) ---------- */
+  document.querySelectorAll('.switch:not(#themeSwitch)').forEach(sw => {
+    sw.addEventListener('click', () => {
+      const on = !sw.classList.contains('on');
+      sw.classList.toggle('on', on);
+      sw.setAttribute('aria-checked', String(on));
+    });
+  });
+
+  /* ---------- Старт ---------- */
+  showTab('reg');
+})();
+</script>
+</body>
+</html>
