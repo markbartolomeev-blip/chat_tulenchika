@@ -7,6 +7,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Чат Тюленчика">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="https://i.postimg.cc/cJT7NQTg/B57414E5-0B7C-4480-8F05-23FEBE4F3E27.png">
+<link rel="icon" href="https://i.postimg.cc/cJT7NQTg/B57414E5-0B7C-4480-8F05-23FEBE4F3E27.png">
 <title>Чат Тюленчика</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1268,7 +1272,7 @@
     <div class="settings">
       <div class="setting"><button class="switch" id="themeSwitch" role="switch" aria-checked="false" aria-label="Темная тема"></button><span>Темная тема</span></div>
       <div class="setting"><button class="switch on" role="switch" aria-checked="true" aria-label="Уведомления"></button><span>Уведомления</span></div>
-      <div class="setting"><button class="switch on" role="switch" aria-checked="true" aria-label="Вибрация"></button><span>Вибрация</span></div>
+      <div class="setting"><button class="switch on" id="vibeSwitch" role="switch" aria-checked="true" aria-label="Вибрация"></button><span>Вибрация</span></div>
     </div>
 
     <div style="width:100%;margin-top:30px"><button class="btn ghost" id="logoutBtn" type="button">Выйти</button></div>
@@ -1365,6 +1369,9 @@
     </div>
   </div>
 </div>
+
+<label id="hapLabel" for="hapInput" class="file-hidden"></label>
+<input type="checkbox" id="hapInput" switch class="file-hidden" tabindex="-1" aria-hidden="true">
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -1477,6 +1484,31 @@
     try { localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); } catch (_) {}
   });
   try { applyTheme(localStorage.getItem(THEME_KEY) === 'dark'); } catch (_) {}
+
+  /* ---------- Вибрация (отдача) ---------- */
+  const VIBE_KEY = 'tyulenchik.vibe';
+  let vibeOn = true;
+  try { vibeOn = localStorage.getItem(VIBE_KEY) !== 'off'; } catch (_) {}
+  function buzz(ms = 12) {
+    if (!vibeOn) return;
+    if (navigator.vibrate) { navigator.vibrate(ms); return; }
+    // iPhone (iOS 18+): переключение скрытого переключателя даёт короткую отдачу
+    const hap = $('hapLabel');
+    if (hap) hap.click();
+  }
+  const vibeSwitch = $('vibeSwitch');
+  vibeSwitch.classList.toggle('on', vibeOn);
+  vibeSwitch.setAttribute('aria-checked', String(vibeOn));
+  vibeSwitch.addEventListener('click', () => {
+    vibeOn = !vibeOn;
+    try { localStorage.setItem(VIBE_KEY, vibeOn ? 'on' : 'off'); } catch (_) {}
+    vibeSwitch.classList.toggle('on', vibeOn);
+    vibeSwitch.setAttribute('aria-checked', String(vibeOn));
+  });
+  // Любое переключение (кроме выключения вибрации) даёт отдачу
+  document.addEventListener('click', e => {
+    if (e.target.closest && e.target.closest('.switch')) buzz();
+  });
 
   /* ---------- Сеть ---------- */
   async function api(method, path, body, token) {
@@ -1643,6 +1675,7 @@
   function setSection(i) {
     if (i === current) return;
     current = i;
+    buzz();
     if (!welcomeGone) {
       welcomeGone = true;
       welcome.remove();
@@ -2682,7 +2715,7 @@
   });
 
   /* ---------- Остальные переключатели (визуальные) ---------- */
-  document.querySelectorAll('.settings .switch:not(#themeSwitch)').forEach(sw => {
+  document.querySelectorAll('.settings .switch:not(#themeSwitch):not(#vibeSwitch)').forEach(sw => {
     sw.addEventListener('click', () => {
       const on = !sw.classList.contains('on');
       sw.classList.toggle('on', on);
