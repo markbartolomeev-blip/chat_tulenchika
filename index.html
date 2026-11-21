@@ -19,6 +19,7 @@
     --card-bg: rgba(255, 255, 255, .16);
     --sheet-bg: rgba(40, 110, 200, .55);
     --field-bg: rgba(255, 255, 255, .14);
+    --tool-bg: rgba(255, 255, 255, .22);
     --bubble-bg: linear-gradient(160deg, #ffffff 0%, #f4fbff 42%, #cdeeff 100%);
     --bubble-text: #0b3d74;
     --bubble-line: rgba(11, 61, 116, .35);
@@ -38,8 +39,9 @@
     --bg-base: #0b1f3f;
     --bg-grad: linear-gradient(120deg, #0b1f3f, #12305c, #0a1a36, #1a3d6e, #0d2249, #102a52);
     --card-bg: rgba(120, 170, 255, .10);
-    --sheet-bg: rgba(12, 40, 85, .85);
+    --sheet-bg: rgba(12, 40, 85, .88);
     --field-bg: rgba(120, 170, 255, .12);
+    --tool-bg: rgba(120, 170, 255, .18);
     --bubble-bg: linear-gradient(160deg, #1d3a6b 0%, #162d56 55%, #10234a 100%);
     --bubble-text: #eaf4ff;
     --bubble-line: rgba(234, 244, 255, .3);
@@ -55,23 +57,27 @@
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { height: 100%; background: var(--bg-base); }
 
+  /* Фон без полос: на весь экран, с запасом за края (чтобы не было синей полосы снизу) */
+  html { height: 100%; background: var(--bg-base); }
   body {
     font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: #fff;
+    position: fixed;
+    inset: 0;
     overflow: hidden;
-    height: 100%;
     -webkit-user-select: none;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     -webkit-font-smoothing: antialiased;
   }
-
   body::before, body::after {
     content: "";
     position: fixed;
-    top: 0; right: 0; bottom: 0; left: 0;
+    top: -60px;
+    right: -60px;
+    bottom: -60px;
+    left: -60px;
     pointer-events: none;
   }
   body::before {
@@ -110,6 +116,10 @@
   @keyframes pop {
     from { opacity: 0; transform: scale(.92); }
     to   { opacity: 1; transform: none; }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
   }
 
   /* ---------- Загрузка ---------- */
@@ -155,7 +165,6 @@
   .screen.active { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
   .hidden { display: none !important; }
 
-  /* Файловые поля: скрыты, но открываются кнопками (не display:none) */
   .file-hidden {
     position: fixed;
     left: -9999px;
@@ -183,7 +192,6 @@
   .round-btn:active { transform: scale(.94); }
   .head-row { display: flex; justify-content: flex-end; align-items: center; min-height: 52px; width: 100%; }
 
-  /* Серая недоступная кнопка после публикации */
   .limit-pill {
     flex: 0 0 auto;
     display: inline-flex;
@@ -324,6 +332,22 @@
   .bubble .text i, .editor i { font-style: italic; }
   .bubble .text u, .editor u { text-decoration: underline; }
   .bubble .text s, .editor s { text-decoration: line-through; }
+  .bubble .text blockquote, .editor blockquote {
+    margin: 6px 0;
+    padding: 2px 0 2px 12px;
+    border-left: 4px solid currentColor;
+    opacity: .92;
+  }
+  /* Скрытый текст: закрыт, нажмите, чтобы открыть */
+  .bubble .text tg-spoiler, .editor tg-spoiler {
+    background: rgba(120, 135, 160, .8);
+    color: transparent;
+    border-radius: 6px;
+    padding: 0 3px;
+    cursor: pointer;
+  }
+  .bubble .text tg-spoiler.open { background: rgba(120, 135, 160, .18); color: inherit; }
+  .editor tg-spoiler { background: rgba(255, 255, 255, .28); }
   .post-img {
     display: block;
     max-width: 100%;
@@ -332,6 +356,7 @@
     margin-top: 10px;
     border: 2px solid var(--bubble-line);
   }
+  .views { margin-top: 8px; text-align: right; font-size: 12px; font-weight: 800; opacity: .7; }
   .reactions { display: flex; flex-wrap: wrap; gap: 8px; padding-left: 58px; align-items: center; }
   .rx {
     display: inline-flex;
@@ -421,8 +446,10 @@
     background: rgba(5, 25, 60, .4);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
+    animation: fade .2s ease both;
   }
   .modal[hidden] { display: none; }
+  .modal.top { z-index: 55; }
   .sheet {
     width: min(100%, 420px);
     max-height: 100%;
@@ -440,30 +467,28 @@
   .sheet::-webkit-scrollbar { display: none; }
   .sheet h3 { font-size: clamp(20px, 6vw, 24px); font-weight: 900; margin-bottom: 14px; text-align: center; }
 
-  /* Маленькая кнопка фото и подсказка над полем */
-  .photo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .photo-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    border: 2px solid #fff;
-    background: rgba(255, 255, 255, .18);
+  .tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .tool-btn {
+    height: 50px;
+    border-radius: 16px;
+    border: 2.5px solid #fff;
+    background: var(--tool-bg);
     color: #fff;
-    font-size: 18px;
+    font: 900 clamp(14px, 4.2vw, 16px) "Nunito", system-ui, sans-serif;
     cursor: pointer;
-    display: grid;
-    place-items: center;
-    flex: 0 0 auto;
+    padding: 0 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  .photo-btn:active { transform: scale(.92); background: rgba(255, 255, 255, .35); }
-  .photo-row .hint-note { margin: 0; }
+  .tool-btn:active { transform: translateY(2px); }
+  .actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
 
-  /* Панель форматирования: появляется над выделенным текстом */
   .sel-bar {
     position: fixed;
     z-index: 70;
     display: none;
-    gap: 6px;
+    gap: 5px;
     padding: 6px;
     border-radius: 16px;
     background: var(--sheet-bg);
@@ -474,32 +499,31 @@
   }
   .sel-bar.show { display: flex; animation: pop .15s ease both; }
   .fmt {
-    width: 40px;
-    height: 38px;
+    width: 38px;
+    height: 36px;
     border-radius: 11px;
     border: 2px solid #fff;
     background: rgba(255, 255, 255, .18);
     color: #fff;
-    font: 900 17px "Nunito", system-ui, sans-serif;
+    font: 900 16px "Nunito", system-ui, sans-serif;
     cursor: pointer;
     display: grid;
     place-items: center;
     transition: transform .12s ease, background .2s ease;
   }
   .fmt:active { transform: scale(.9); background: rgba(255, 255, 255, .4); }
-  .fmt.b { font-weight: 900; }
   .fmt.i { font-style: italic; }
   .fmt.u { text-decoration: underline; }
   .fmt.s { text-decoration: line-through; }
 
   .editor {
     width: 100%;
-    min-height: 150px;
+    min-height: 170px;
     max-height: 40dvh;
     overflow-y: auto;
-    border: 2.5px dashed rgba(255, 255, 255, .9);
-    border-radius: 18px;
-    padding: 12px 14px;
+    border: 2.5px solid rgba(255, 255, 255, .9);
+    border-radius: 22px;
+    padding: 14px 16px;
     font: 700 clamp(17px, 5vw, 19px)/1.3 "Nunito", system-ui, sans-serif;
     color: #fff;
     background: var(--field-bg);
@@ -509,7 +533,6 @@
     -webkit-user-select: text;
     user-select: text;
   }
-  .editor:focus { border-style: solid; }
   .editor:empty::before { content: attr(data-placeholder); opacity: .7; }
 
   .img-preview { position: relative; margin-top: 12px; }
@@ -527,6 +550,32 @@
     font-weight: 900;
     cursor: pointer;
   }
+  .opts-line { margin-top: 10px; font-size: 13px; font-weight: 800; opacity: .9; text-align: center; min-height: 18px; }
+
+  /* Кастомизация */
+  .cust-title { font-size: 15px; font-weight: 900; margin: 14px 0 8px; }
+  .swatches { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; }
+  .sw {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, .9);
+    cursor: pointer;
+    padding: 0;
+  }
+  .sw.sel { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #1a6fc4; }
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+    font-size: 17px;
+    font-weight: 900;
+  }
+  .toggle-row .switch { width: 74px; height: 42px; }
+  .toggle-row .switch::after { width: 34px; height: 34px; top: 4px; left: 4px; }
+  .toggle-row .switch.on::after { transform: translateX(32px); }
 
   .field-label { display: block; font-size: 16px; font-weight: 900; margin: 14px 0 6px; }
   .hint-note { font-size: 13px; font-weight: 800; opacity: .85; margin-top: 6px; line-height: 1.3; }
@@ -545,6 +594,19 @@
     animation: pop .2s ease both;
   }
   .tip-foot { margin-top: 6px; font-size: 13px; font-style: italic; font-weight: 800; opacity: .85; }
+
+  /* Ожидание */
+  .wait-sheet { text-align: center; }
+  .spinner { font-size: 56px; margin: 6px 0; display: inline-block; animation: spin 2.4s linear infinite; }
+  .wait-text { font-size: 19px; font-weight: 900; line-height: 1.35; }
+  .phrase {
+    margin-top: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.35;
+    min-height: 44px;
+    animation: fade .6s ease both;
+  }
 
   /* ---------- Мессенджер ---------- */
   #messenger { position: relative; text-align: center; height: 100%; }
@@ -707,10 +769,6 @@
   }
   .photo-pick.has { border-style: solid; }
 
-  #waitBox { text-align: center; }
-  .spinner { font-size: 56px; margin: 10px 0; display: inline-block; animation: spin 2.4s linear infinite; }
-  .wait-text { font-size: 19px; font-weight: 900; line-height: 1.35; }
-
   .profile { text-align: center; display: flex; flex-direction: column; align-items: center; }
   .photo {
     width: min(160px, 42vw);
@@ -872,6 +930,23 @@
     padding: 0 2px;
   }
   .tab.active .label { text-shadow: 0 1px 2px rgba(0, 60, 130, .45); }
+  /* Красный «!» над иконкой доски, пока есть непросмотренные объявления */
+  .badge {
+    position: absolute;
+    top: 0;
+    right: 12%;
+    z-index: 2;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #e53935;
+    border: 2px solid #fff;
+    color: #fff;
+    font: 900 13px/16px "Nunito", system-ui, sans-serif;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .3);
+    pointer-events: none;
+  }
 
   :focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 
@@ -887,6 +962,7 @@
     .bubble { max-width: calc(100% - 52px); }
     .reactions { padding-left: 0; }
     .timer .lbl { font-size: 12px; }
+    .tools { grid-template-columns: 1fr; }
   }
   @media (orientation: landscape) and (max-height: 500px) {
     .screen { padding-top: calc(var(--safe-top) + 10px); padding-bottom: calc(var(--safe-bottom) + 120px); }
@@ -1034,7 +1110,7 @@
       <div id="loginErr"></div>
     </div>
 
-    <!-- Забыли TulenID: ввод Telegram -->
+    <!-- Забыли TulenID -->
     <div class="card hidden" id="forgotForm">
       <div class="step-title">🔎 Восстановление TulenID</div>
       <label class="field-label" for="forgotTg">✈️ Telegram-username, привязанный к профилю</label>
@@ -1050,20 +1126,12 @@
       <div class="step-title">🎫 Новый TulenID</div>
       <label class="field-label" for="newId">Введите новый TulenID</label>
       <input type="text" id="newId" maxlength="20" placeholder="Например, vika_new">
-      <div class="hint-note">Латиница, цифры и _ (3–20 символов)</div>
+      <div class="hint-note">Латиница, цифры и _ (3–20 символов). Менять можно раз в 7 дней.</div>
       <div class="row">
         <button class="btn ghost" id="newIdCancel" type="button">Отмена</button>
         <button class="btn" id="newIdSave" type="button">Сохранить</button>
       </div>
       <div id="newIdErr"></div>
-    </div>
-
-    <!-- Ожидание кнопки в Telegram -->
-    <div class="card hidden" id="waitBox">
-      <div class="spinner" aria-hidden="true">⏳</div>
-      <div class="wait-text" id="waitText">Ждём подтверждения в Telegram</div>
-      <div class="hint-note">Откройте Telegram и нажмите кнопку от бота</div>
-      <button class="btn ghost" id="waitCancel" type="button">Отмена</button>
     </div>
   </div>
 
@@ -1098,31 +1166,70 @@
   </div>
 </section>
 
-<!-- Объявление: новое и изменение -->
+<!-- Новое объявление / изменение -->
 <div class="modal" id="modal" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
     <h3 id="sheetTitle">Новое объявление</h3>
-    <div class="photo-row">
-      <button class="photo-btn" id="photoBtn" type="button" aria-label="Добавить фото">🖼️</button>
-      <div class="hint-note">Выделите текст, чтобы появились кнопки оформления</div>
-    </div>
     <div class="editor" id="editor" contenteditable="true" data-placeholder="Напишите объявление..."></div>
     <input type="file" id="postFile" accept="image/*" class="file-hidden">
     <div id="postImgWrap"></div>
+    <div class="tools">
+      <button class="tool-btn" id="photoBtn" type="button">📎 Прикрепить Фото</button>
+      <button class="tool-btn" id="custBtn" type="button">🎨 Кастомизация</button>
+    </div>
+    <div class="opts-line" id="optsLine"></div>
     <div id="postErr"></div>
-    <div class="row" style="margin-top:14px">
+    <div class="actions-row">
       <button class="btn ghost" id="cancelBtn" type="button">Отмена</button>
       <button class="btn" id="saveBtn" type="button">Опубликовать</button>
     </div>
   </div>
 </div>
 
-<!-- Панель форматирования: появляется над выделенным текстом -->
+<!-- Кастомизация объявления -->
+<div class="modal top" id="custModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="custTitle">
+    <h3 id="custTitle">Кастомизация</h3>
+
+    <div class="cust-title">Цвет сообщения</div>
+    <div class="swatches" id="swBubble"></div>
+
+    <div class="cust-title">Цвет текста</div>
+    <div class="swatches" id="swText"></div>
+
+    <div class="toggle-row">
+      <span>Отправить бесшумно</span>
+      <button class="switch" id="silentSwitch" role="switch" aria-checked="false" aria-label="Отправить бесшумно"></button>
+    </div>
+    <div class="hint-note">Пока заглушка: функция появится позже</div>
+
+    <div class="toggle-row">
+      <span>Отключить реакции</span>
+      <button class="switch" id="noReactSwitch" role="switch" aria-checked="false" aria-label="Отключить реакции"></button>
+    </div>
+
+    <button class="btn" id="custDone" type="button">Готово</button>
+  </div>
+</div>
+
+<!-- Панель оформления: появляется над выделенным текстом -->
 <div class="sel-bar" id="selBar" role="toolbar" aria-label="Оформление текста">
-  <button class="fmt b" type="button" data-cmd="bold" aria-label="Жирный">B</button>
+  <button class="fmt" type="button" data-cmd="bold" aria-label="Жирный" style="font-weight:900">B</button>
   <button class="fmt i" type="button" data-cmd="italic" aria-label="Курсив">I</button>
   <button class="fmt u" type="button" data-cmd="underline" aria-label="Подчёркнутый">U</button>
   <button class="fmt s" type="button" data-cmd="strikeThrough" aria-label="Зачёркнутый">S</button>
+  <button class="fmt" type="button" data-wrap="tg-spoiler" aria-label="Скрытый текст">🫥</button>
+  <button class="fmt" type="button" data-wrap="blockquote" aria-label="Цитата">❝</button>
+</div>
+
+<!-- Ожидание ответа Telegram -->
+<div class="modal top" id="waitOverlay" hidden>
+  <div class="sheet wait-sheet" role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true">⏳</div>
+    <div class="wait-text" id="waitText"></div>
+    <div class="phrase hidden" id="waitPhrase"></div>
+    <button class="btn ghost" id="waitCancel" type="button">Отмена</button>
+  </div>
 </div>
 
 <!-- Редактирование профиля -->
@@ -1138,7 +1245,7 @@
       TulenID
     </label>
     <input type="text" id="editApp" maxlength="20" placeholder="TulenID">
-    <div class="hint-note">Латиница, цифры и _ (3–20 символов)</div>
+    <div class="hint-note">Менять можно раз в 7 дней. Смена подтверждается в Telegram.</div>
 
     <div class="hint-note" style="margin-top:14px;text-align:center">📷 Фото: нажмите на фото в профиле</div>
 
@@ -1166,6 +1273,7 @@
     <img src="https://i.postimg.cc/DzqN4m59/B1DA9417-06A4-4F00-8C2C-AE40C1D36AAD.png" alt="">
     <span class="fb">📋</span>
     <span class="label">Доска Объявлений</span>
+    <span class="badge hidden" id="boardBadge" aria-label="Есть непросмотренные объявления">!</span>
   </div>
 
   <div class="tab" role="tab" data-index="2" data-normal="https://i.postimg.cc/JhbFHtKF/AC715512-A513-4A47-AA9C-24CB2DD30D13.png" data-selected="https://i.postimg.cc/cHr1tKr8/CC7B63A2-BDE7-4D6F-A146-45FFDE39FE32.png" aria-label="Мессенджер">
@@ -1195,7 +1303,25 @@
   const TG_RE = /^[A-Za-z][A-Za-z0-9_]{4,31}$/;
   const POLL_MS = 2000;
   const WAIT_MS = 190000;
+  const PHRASE_AFTER_MS = 30000;
+  const PHRASE_EVERY_MS = 10000;
+  const PHRASES = [
+    'Это может занять некоторое время…',
+    'Сервера долго отвечают…',
+    'Пожалуйста, подождите, мы спасаем тюленчика 🦭',
+    'Тюлень уже плывёт за вашим подтверждением 🌊',
+    'Почти готово, держитесь…',
+    'Проверяем, не уснул ли бот 🤖',
+    'Ещё чуть-чуть, тюлени тоже ждут рыбку 🐟',
+    'Сервер думает, как и мы…',
+  ];
   const REACTIONS = ['👍', '👎', '❤️', '🤬', '💩'];
+  // 9 стандартных цветов
+  const PALETTE = [
+    ['#e53935', 'красный'], ['#fb8c00', 'оранжевый'], ['#fdd835', 'желтый'],
+    ['#43a047', 'зеленый'], ['#4fc3f7', 'голубой'], ['#1e88e5', 'синий'],
+    ['#8e24aa', 'фиолетовый'], ['#111111', 'черный'], ['#ffffff', 'белый'],
+  ];
   const MAX_IMG_SIDE = 900;
   const MAX_IMG_BYTES = 700000;
   const $ = id => document.getElementById(id);
@@ -1217,10 +1343,12 @@
   let posts = [];
   let limit = null;
   let limitTimer = null;
+  let unseen = 0;
   let currentView = 'reg';
   let postImage = '';
   let editingId = null;
   let grant = '';
+  let draftOpts = { bubble: '', color: '', silent: false, noReactions: false };
 
   const pad2 = n => String(n).padStart(2, '0');
 
@@ -1279,6 +1407,65 @@
       if (r.ok) me = r.data.user;
       else { if (r.status === 401) clearToken(); me = null; }
     } catch (_) { me = null; }
+  }
+
+  /* ---------- Ожидание ответа Telegram (с надписями через 30 секунд) ---------- */
+  let cancelWait = null;
+  let phraseDelay = null;
+  let phraseTick = null;
+  let lastPhrase = -1;
+
+  function nextPhrase() {
+    let i;
+    do { i = Math.floor(Math.random() * PHRASES.length); } while (i === lastPhrase && PHRASES.length > 1);
+    lastPhrase = i;
+    const el = $('waitPhrase');
+    el.classList.remove('hidden');
+    el.style.animation = 'none';
+    el.offsetHeight; // перезапуск анимации
+    el.style.animation = '';
+    el.textContent = PHRASES[i];
+  }
+
+  function showWait(text) {
+    $('waitText').textContent = text;
+    if (!$('waitOverlay').hidden) return; // уже ждём: только меняем текст
+    $('waitPhrase').classList.add('hidden');
+    $('waitOverlay').hidden = false;
+    clearTimeout(phraseDelay);
+    clearInterval(phraseTick);
+    phraseDelay = setTimeout(() => {
+      nextPhrase();
+      phraseTick = setInterval(nextPhrase, PHRASE_EVERY_MS);
+    }, PHRASE_AFTER_MS);
+  }
+
+  function hideWait() {
+    $('waitOverlay').hidden = true;
+    clearTimeout(phraseDelay);
+    clearInterval(phraseTick);
+    cancelWait = null;
+  }
+
+  $('waitCancel').addEventListener('click', () => { if (cancelWait) cancelWait('cancelled'); });
+
+  function waitForConfirm(id) {
+    return new Promise(resolve => {
+      const started = Date.now();
+      const timer = setInterval(async () => {
+        if (Date.now() - started > WAIT_MS) return finish({ status: 'expired' });
+        try {
+          const r = await api('GET', '/status?id=' + encodeURIComponent(id));
+          if (r.ok && r.data.status !== 'pending') finish(r.data);
+        } catch (_) {}
+      }, POLL_MS);
+      function finish(result) {
+        clearInterval(timer);
+        cancelWait = null;
+        resolve(result);
+      }
+      cancelWait = status => finish({ status });
+    });
   }
 
   /* ---------- Загрузка: всё загрузить, потом показать ---------- */
@@ -1412,8 +1599,11 @@
 
   /* ---------- Безопасное форматирование текста ---------- */
   function sanitize(src) {
-    const map = { strong: 'b', b: 'b', em: 'i', i: 'i', u: 'u', strike: 's', s: 's', del: 's', br: 'br', div: 'div', p: 'div' };
-    let s = String(src || '').replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, (m, tag) => {
+    const map = {
+      strong: 'b', b: 'b', em: 'i', i: 'i', u: 'u', strike: 's', s: 's', del: 's',
+      br: 'br', div: 'div', p: 'div', blockquote: 'blockquote', 'tg-spoiler': 'tg-spoiler',
+    };
+    let s = String(src || '').replace(/<\/?([a-zA-Z][a-zA-Z0-9-]*)\b[^>]*>/g, (m, tag) => {
       const t = map[tag.toLowerCase()];
       if (!t) return '';
       const closing = m.startsWith('</');
@@ -1421,7 +1611,7 @@
       if (t === 'div') return closing ? '<br>' : '';
       return closing ? `</${t}>` : `<${t}>`;
     });
-    s = s.replace(/<(?!\/?(b|i|u|s|br)>)/g, '&lt;');
+    s = s.replace(/<(?!\/?(b|i|u|s|br|blockquote|tg-spoiler)>)/g, '&lt;');
     return s.replace(/(<br>\s*)+$/, '');
   }
 
@@ -1429,6 +1619,12 @@
     const d = document.createElement('div');
     d.innerHTML = htmlStr;
     return d.textContent.trim().length;
+  }
+
+  function isDarkHex(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    return (0.299 * r + 0.587 * g + 0.114 * b) < 140;
   }
 
   /* ---------- Доска ---------- */
@@ -1439,16 +1635,48 @@
     return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.${String(d.getFullYear()).slice(-2)}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   }
 
+  function updateBadge() {
+    const show = unseen > 0 && current !== 1 && !!getToken();
+    $('boardBadge').classList.toggle('hidden', !show);
+  }
+
   async function loadBoard() {
     try {
       const r = await api('GET', '/board', null, getToken());
       if (r.ok) {
         posts = r.data.posts || [];
         limit = r.data.limit || null;
+        unseen = r.data.unseen || 0;
         renderFeed();
         renderLimit();
+        if (current === 1) markSeen();
+        updateBadge();
       }
     } catch (_) {}
+  }
+
+  // Доска открыта: отмечаем объявления просмотренными
+  async function markSeen() {
+    if (!getToken() || !me) return;
+    try {
+      const r = await api('POST', '/board/seen', null, getToken());
+      if (r.ok) {
+        posts = r.data.posts;
+        unseen = r.data.unseen || 0;
+        renderFeed();
+        updateBadge();
+      }
+    } catch (_) {}
+  }
+
+  function applyOpts(bub, tx, opts) {
+    if (!opts) return;
+    if (opts.bubble) {
+      bub.style.background = opts.bubble;
+      bub.style.borderColor = 'rgba(0,0,0,.25)';
+    }
+    const textColor = opts.color || (opts.bubble ? (isDarkHex(opts.bubble) ? '#ffffff' : '#0b1f3f') : '');
+    if (textColor) bub.style.color = textColor;
   }
 
   function renderFeed() {
@@ -1496,26 +1724,35 @@
         img.src = p.image;
         bub.append(img);
       }
+      const views = document.createElement('div');
+      views.className = 'views';
+      views.textContent = `👁 ${p.views || 0}`;
+      bub.append(views);
+
+      applyOpts(bub, tx, p.opts);
       row.append(av, bub);
 
+      const noReact = !!(p.opts && p.opts.noReactions);
       const rx = document.createElement('div');
       rx.className = 'reactions';
-      REACTIONS.forEach(emo => {
-        if (!(p.reactions && p.reactions[emo])) return;
-        const mine = !!(p.mine && p.mine.includes(emo));
-        const chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'rx' + (mine ? ' on' : '');
-        chip.setAttribute('aria-label', mine ? `Убрать реакцию ${emo}` : `Реакция ${emo}`);
-        const e = document.createElement('span');
-        e.className = 'emo';
-        e.textContent = emo;
-        const c = document.createElement('span');
-        c.textContent = p.reactions[emo];
-        chip.append(e, c);
-        chip.addEventListener('click', () => { if (mine) react(p.id, emo); });
-        rx.append(chip);
-      });
+      if (!noReact) {
+        REACTIONS.forEach(emo => {
+          if (!(p.reactions && p.reactions[emo])) return;
+          const mine = !!(p.mine && p.mine.includes(emo));
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'rx' + (mine ? ' on' : '');
+          chip.setAttribute('aria-label', mine ? `Убрать реакцию ${emo}` : `Реакция ${emo}`);
+          const e = document.createElement('span');
+          e.className = 'emo';
+          e.textContent = emo;
+          const c = document.createElement('span');
+          c.textContent = p.reactions[emo];
+          chip.append(e, c);
+          chip.addEventListener('click', () => { if (mine) react(p.id, emo); });
+          rx.append(chip);
+        });
+      }
 
       if (p.own) {
         const wrap = document.createElement('div');
@@ -1534,11 +1771,17 @@
         rx.append(wrap);
       }
 
-      bindPress(bub, p);
+      if (!noReact) bindPress(bub, p);
       art.append(row, rx);
       feed.append(art);
     });
   }
+
+  // Открыть скрытый текст нажатием
+  feed.addEventListener('click', e => {
+    const sp = e.target.closest && e.target.closest('tg-spoiler');
+    if (sp && feed.contains(sp)) sp.classList.toggle('open');
+  });
 
   /* ---------- Лимит: одно объявление в день ---------- */
   function renderLimit() {
@@ -1725,13 +1968,26 @@
     wrap.append(box);
   }
 
+  function renderOptsLine() {
+    const parts = [];
+    if (draftOpts.bubble) parts.push('цвет сообщения');
+    if (draftOpts.color) parts.push('цвет текста');
+    if (draftOpts.silent) parts.push('бесшумно');
+    if (draftOpts.noReactions) parts.push('реакции отключены');
+    $('optsLine').textContent = parts.length ? 'Оформление: ' + parts.join(', ') : '';
+  }
+
   function openEditor(p) {
     editingId = p ? p.id : null;
     $('sheetTitle').textContent = p ? 'Изменить объявление' : 'Новое объявление';
     $('saveBtn').textContent = p ? 'Сохранить' : 'Опубликовать';
     editor.innerHTML = p ? sanitize(p.text) : '';
     postImage = p && p.image ? p.image : '';
+    draftOpts = p && p.opts
+      ? { bubble: p.opts.bubble || '', color: p.opts.color || '', silent: !!p.opts.silent, noReactions: !!p.opts.noReactions }
+      : { bubble: '', color: '', silent: false, noReactions: false };
     renderPostImage();
+    renderOptsLine();
     err('postErr', '');
     modal.hidden = false;
     setTimeout(() => editor.focus(), 50);
@@ -1741,11 +1997,12 @@
     modal.hidden = true;
     editingId = null;
     selBar.classList.remove('show');
+    $('custModal').hidden = true;
   }
   $('cancelBtn').addEventListener('click', closeModal);
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
-  /* Панель оформления: показывается над выделением, не забирает выделение */
+  // Панель оформления появляется над выделенным текстом
   function updateSelBar() {
     const sel = window.getSelection();
     if (modal.hidden || !sel || sel.rangeCount === 0 || sel.isCollapsed || !editor.contains(sel.anchorNode)) {
@@ -1770,15 +2027,43 @@
   document.addEventListener('selectionchange', updateSelBar);
   window.addEventListener('resize', updateSelBar);
 
+  // Обернуть выделение в тег (скрытый текст, цитата); повторное нажатие снимает оформление
+  function toggleWrap(tag) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    let node = range.commonAncestorContainer;
+    if (node.nodeType === 3) node = node.parentNode;
+    const existing = node.closest ? node.closest(tag) : null;
+    if (existing && editor.contains(existing)) {
+      const parent = existing.parentNode;
+      while (existing.firstChild) parent.insertBefore(existing.firstChild, existing);
+      parent.removeChild(existing);
+      return;
+    }
+    const el = document.createElement(tag);
+    try {
+      range.surroundContents(el);
+    } catch (_) {
+      el.appendChild(range.extractContents());
+      range.insertNode(el);
+    }
+    sel.removeAllRanges();
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    sel.addRange(r);
+  }
+
   selBar.querySelectorAll('.fmt').forEach(btn => {
     btn.addEventListener('pointerdown', e => e.preventDefault());
     btn.addEventListener('click', () => {
-      document.execCommand(btn.dataset.cmd, false, null);
+      if (btn.dataset.wrap) toggleWrap(btn.dataset.wrap);
+      else document.execCommand(btn.dataset.cmd, false, null);
       setTimeout(updateSelBar, 0);
     });
   });
 
-  // Кнопка фото: без preventDefault, чтобы выбор файла открывался
+  // Прикрепить фото
   $('photoBtn').addEventListener('click', () => $('postFile').click());
   $('postFile').addEventListener('change', () => {
     const f = $('postFile').files[0];
@@ -1789,6 +2074,53 @@
     });
   });
 
+  /* ---------- Кастомизация ---------- */
+  function buildSwatches(containerId, key) {
+    const box = $(containerId);
+    box.textContent = '';
+    PALETTE.forEach(([hex, name]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sw' + (draftOpts[key] === hex ? ' sel' : '');
+      b.style.background = hex;
+      b.setAttribute('aria-label', name);
+      b.title = name;
+      b.addEventListener('click', () => {
+        draftOpts[key] = draftOpts[key] === hex ? '' : hex;
+        buildSwatches(containerId, key);
+        renderOptsLine();
+      });
+      box.append(b);
+    });
+  }
+
+  function setSwitch(id, on) {
+    const sw = $(id);
+    sw.classList.toggle('on', on);
+    sw.setAttribute('aria-checked', String(on));
+  }
+
+  $('custBtn').addEventListener('click', () => {
+    buildSwatches('swBubble', 'bubble');
+    buildSwatches('swText', 'color');
+    setSwitch('silentSwitch', draftOpts.silent);
+    setSwitch('noReactSwitch', draftOpts.noReactions);
+    $('custModal').hidden = false;
+  });
+  $('silentSwitch').addEventListener('click', () => {
+    draftOpts.silent = !draftOpts.silent;
+    setSwitch('silentSwitch', draftOpts.silent);
+    renderOptsLine();
+  });
+  $('noReactSwitch').addEventListener('click', () => {
+    draftOpts.noReactions = !draftOpts.noReactions;
+    setSwitch('noReactSwitch', draftOpts.noReactions);
+    renderOptsLine();
+  });
+  $('custDone').addEventListener('click', () => { $('custModal').hidden = true; });
+  $('custModal').addEventListener('click', e => { if (e.target === $('custModal')) $('custModal').hidden = true; });
+
+  /* ---------- Публикация ---------- */
   $('saveBtn').addEventListener('click', async () => {
     const text = sanitize(editor.innerHTML);
     if (!plainLength(text) && !postImage) return err('postErr', '✏️ Напишите текст или добавьте фото');
@@ -1803,8 +2135,8 @@
     try {
       const path = editingId ? '/board/edit' : '/board';
       const body = editingId
-        ? { id: editingId, text, image: postImage }
-        : { text, image: postImage };
+        ? { id: editingId, text, image: postImage, opts: draftOpts }
+        : { text, image: postImage, opts: draftOpts };
       const r = await api('POST', path, body, getToken());
       if (r.ok) {
         posts = r.data.posts;
@@ -1830,41 +2162,6 @@
     }
   });
 
-  /* ---------- Ожидание кнопки в Telegram ---------- */
-  let cancelWait = null;
-
-  // Скрывает все карточки входа и показывает ожидание
-  function showWait(text) {
-    $('waitText').textContent = text;
-    $('authBlock').querySelectorAll('.tabs, #regForm, #loginForm, #forgotForm, #newIdForm').forEach(el => el.classList.add('hidden'));
-    $('waitBox').classList.remove('hidden');
-  }
-  function hideWait() {
-    $('waitBox').classList.add('hidden');
-    showView(currentView);
-    cancelWait = null;
-  }
-  $('waitCancel').addEventListener('click', () => { if (cancelWait) cancelWait('cancelled'); });
-
-  function waitForConfirm(id) {
-    return new Promise(resolve => {
-      const started = Date.now();
-      const timer = setInterval(async () => {
-        if (Date.now() - started > WAIT_MS) return finish({ status: 'expired' });
-        try {
-          const r = await api('GET', '/status?id=' + encodeURIComponent(id));
-          if (r.ok && r.data.status !== 'pending') finish(r.data);
-        } catch (_) {}
-      }, POLL_MS);
-      function finish(result) {
-        clearInterval(timer);
-        cancelWait = null;
-        resolve(result);
-      }
-      cancelWait = status => finish({ status });
-    });
-  }
-
   /* ---------- Профиль и состояние входа ---------- */
   function renderProfile(u) {
     $('pName').textContent = u.name;
@@ -1882,10 +2179,10 @@
     } else {
       $('profileBlock').classList.add('hidden');
       $('authBlock').classList.remove('hidden');
-      $('waitBox').classList.add('hidden');
       showView(currentView);
     }
     renderLimit();
+    updateBadge();
   }
 
   function handleResult(res, errId, expiredText) {
@@ -1901,14 +2198,13 @@
     else if (res.status === 'expired') err(errId, expiredText);
   }
 
-  /* ---------- Виды входа: регистрация, вход, восстановление, новый TulenID ---------- */
+  /* ---------- Виды входа ---------- */
   function showView(name) {
     currentView = name;
     const isReg = name === 'reg';
     const isLogin = name === 'login';
     $('tabReg').classList.toggle('on', isReg);
     $('tabLogin').classList.toggle('on', isLogin);
-    // Вкладки видны только в регистрации и входе
     $('authBlock').querySelector('.tabs').classList.toggle('hidden', !(isReg || isLogin));
     $('regForm').classList.toggle('hidden', !isReg);
     $('loginForm').classList.toggle('hidden', !isLogin);
@@ -2156,6 +2452,7 @@
     clearToken();
     me = null;
     limit = null;
+    unseen = 0;
     showView('reg');
     refreshProfileUI();
   });
@@ -2171,6 +2468,7 @@
     });
   });
 
+  // Редактирование: имя меняется сразу; новый TulenID — только после подтверждения в боте
   $('editBtn').addEventListener('click', () => {
     if (!me) return;
     $('editName').value = me.name;
@@ -2185,21 +2483,49 @@
     const name = $('editName').value.trim();
     const app = $('editApp').value.trim();
     if (!name) return err('editErr', '✏️ Напишите имя');
-    if (!APP_RE.test(app)) return err('editErr', '🏷️ TulenID: 3–20 символов, латиница, цифры или _');
+    if (app !== me.app && !APP_RE.test(app)) return err('editErr', '🏷️ TulenID: 3–20 символов, латиница, цифры или _');
 
     $('editSave').disabled = true;
-    const res = await saveProfile({ name, app });
-    $('editSave').disabled = false;
-    if (res.ok) {
+    try {
+      if (name !== me.name) {
+        const res = await saveProfile({ name });
+        if (!res.ok) return err('editErr', '⚠️ ' + res.msg);
+      }
+
+      if (app === me.app) {
+        $('editModal').hidden = true;
+        if (name !== me.name) toast('✅ Сохранено');
+        return;
+      }
+
+      const r = await api('POST', '/tulenid/request', { tulenid: app }, getToken());
+      if (!r.ok) {
+        if (r.status === 401) { clearToken(); me = null; refreshProfileUI(); $('editModal').hidden = true; return toast('Сессия закончилась, войдите снова'); }
+        return err('editErr', '⚠️ ' + (r.data.error || 'Не получилось начать смену'));
+      }
+
       $('editModal').hidden = true;
-      toast('✅ Сохранено');
-    } else {
-      err('editErr', '⚠️ ' + res.msg);
+      showWait('⏳ Подтвердите смену TulenID в Telegram');
+      const res = await waitForConfirm(r.data.id);
+      hideWait();
+      if (res.status === 'yes') {
+        await fetchMe();
+        refreshProfileUI();
+        toast('✅ TulenID изменён');
+      } else if (res.status === 'no') {
+        toast('Оставлено без изменений');
+      } else if (res.status === 'expired') {
+        toast('⏳ Время вышло, попробуйте ещё раз');
+      }
+    } catch (_) {
+      err('editErr', '📡 Нет связи с сервером, попробуйте позже');
+    } finally {
+      $('editSave').disabled = false;
     }
   });
 
   /* ---------- Остальные переключатели (визуальные) ---------- */
-  document.querySelectorAll('.switch:not(#themeSwitch)').forEach(sw => {
+  document.querySelectorAll('.settings .switch:not(#themeSwitch)').forEach(sw => {
     sw.addEventListener('click', () => {
       const on = !sw.classList.contains('on');
       sw.classList.toggle('on', on);
@@ -2209,6 +2535,8 @@
 
   /* ---------- Старт ---------- */
   showView('reg');
+  // Бейдж «!» обновляется сам, пока открыто приложение
+  setInterval(() => { if (getToken() && me && current !== 1) loadBoard(); }, 60000);
 })();
 </script>
 </body>
