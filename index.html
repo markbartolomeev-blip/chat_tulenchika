@@ -2,7 +2,7 @@
 <html lang="ru" class="is-loading" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#4a92cc" id="themeMeta">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -58,14 +58,14 @@
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* Жестко фиксируем высоту на весь экран */
+  /* Жестко фиксируем html/body, запрещаем скролл всей страницы (скролл только внутри экранов) */
   html, body {
     height: 100%;
     width: 100%;
     margin: 0;
     padding: 0;
     background-color: var(--bg-base);
-    overscroll-behavior: none;
+    overscroll-behavior: none; /* Отключаем оттягивание (bounce) страницы */
   }
   html[data-theme="dark"] { background-color: #0c2344; }
 
@@ -81,7 +81,7 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Фон, который вылезает за пределы экрана на 100px со всех сторон, чтобы нигде не было зазоров */
+  /* Фон, который вылезает за пределы экрана со всех сторон на 100px, чтобы гарантированно не было полос */
   body::before, body::after {
     content: "";
     position: fixed;
@@ -159,10 +159,10 @@
     bottom: 0;
     left: 50%;
     width: min(100%, 480px);
-    /* Учитываем безопасную зону сверху и высоту дока снизу */
-    padding: calc(var(--safe-top) + 20px) 22px calc(var(--safe-bottom) + var(--dock-height) + 30px);
+    /* Сверху учитываем вырез, снизу оставляем место под плавающую шкалу и системный свайп */
+    padding: calc(var(--safe-top) + 20px) 22px calc(var(--safe-bottom) + var(--dock-height) + 20px);
     overflow-y: auto;
-    overscroll-behavior: contain;
+    overscroll-behavior: contain; /* Скролл не переходит на body */
     opacity: 0;
     visibility: hidden;
     transform: translate(-50%, 14px);
@@ -835,8 +835,8 @@
   .dock {
     position: fixed;
     left: 50%;
-    /* Жёстко привязываем к низу с учётом безопасной зоны (полоски айфона) */
-    bottom: max(12px, var(--safe-bottom));
+    /* Отступ снизу: 12px + системная зона свайпа (чтобы шкала висела ровно над полоской "Домой") */
+    bottom: calc(var(--safe-bottom) + 12px);
     transform: translateX(-50%);
     width: min(92vw, 440px);
     height: var(--dock-height);
