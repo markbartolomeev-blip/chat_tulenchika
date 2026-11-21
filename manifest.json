@@ -1,0 +1,19 @@
+{
+  "name": "Чат Тюленчика",
+  "short_name": "Тюленчик",
+  "description": "События и общение в одном месте",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#3a7cbc",
+  "theme_color": "#4f9bd9",
+  "icons": [
+    {
+      "src": "https://i.postimg.cc/cJT7NQTg/B57414E5-0B7C-4480-8F05-23FEBE4F3E27.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
