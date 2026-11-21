@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#4f9bd9" id="themeMeta">
+<meta name="theme-color" content="#4a92cc" id="themeMeta">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Чат Тюленчика">
@@ -12,7 +12,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
-  /* ---------- Цвета: светлая и тёмная (тёмно-синяя) темы ---------- */
   :root {
     --bg-base: #4a92cc;
     --bg-grad: linear-gradient(120deg, #3b86c6, #4f9bd9, #3a7cbc, #5fb0e6, #4288cb, #3d8ac8);
@@ -34,6 +33,7 @@
     --switch-off: rgba(255, 255, 255, .85);
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --dock-height: clamp(88px, 13vh, 102px);
   }
   html[data-theme="dark"] {
     --bg-base: #0b1f3f;
@@ -58,28 +58,40 @@
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* Фон без полос: на весь экран, с запасом за края (чтобы не было синей полосы снизу) */
-  html { height: 100%; background-color: #3a7cbc; }
+  /* Полностью убираем отступы и растягиваем html/body */
+  html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-base);
+    overscroll-behavior: none;
+  }
   html[data-theme="dark"] { background-color: #0c2344; }
+
   body {
     font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: #fff;
-    position: relative;
-    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     overflow: hidden;
     -webkit-user-select: none;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     -webkit-font-smoothing: antialiased;
   }
+
+  /* Жестко фиксируем фон под статус-баром и панелью жестов */
   body::before, body::after {
     content: "";
     position: fixed;
-    top: -60px;
-    right: -60px;
-    left: -60px;
-    height: calc(100vh + 120px);
-    height: calc(100lvh + 120px);
+    top: -100px;
+    left: 0;
+    right: 0;
+    bottom: -100px;
     pointer-events: none;
   }
   body::before {
@@ -132,6 +144,7 @@
     display: grid;
     place-items: center;
     background: var(--bg-grad);
+    background-size: 300% 300%;
     transition: opacity .6s ease, visibility .6s ease;
   }
   #loader.hide { opacity: 0; visibility: hidden; }
@@ -152,7 +165,7 @@
     bottom: 0;
     left: 50%;
     width: min(100%, 480px);
-    padding: calc(var(--safe-top) + 28px) 22px calc(var(--safe-bottom) + 150px);
+    padding: calc(var(--safe-top) + 20px) 22px calc(var(--safe-bottom) + var(--dock-height) + 20px);
     overflow-y: auto;
     overscroll-behavior: contain;
     opacity: 0;
@@ -340,7 +353,6 @@
     border-left: 4px solid currentColor;
     opacity: .92;
   }
-  /* Скрытый текст: закрыт, нажмите, чтобы открыть */
   .bubble .text tg-spoiler, .editor tg-spoiler {
     background: rgba(120, 135, 160, .8);
     color: transparent;
@@ -828,10 +840,10 @@
   .dock {
     position: fixed;
     left: 50%;
-    bottom: 6px;
+    bottom: calc(var(--safe-bottom) + 8px);
     transform: translateX(-50%);
     width: min(92vw, 440px);
-    height: clamp(88px, 13vh, 102px);
+    height: var(--dock-height);
     padding: 8px;
     border-radius: 36px;
     display: grid;
@@ -932,7 +944,7 @@
     padding: 0 2px;
   }
   .tab.active .label { text-shadow: 0 1px 2px rgba(0, 60, 130, .45); }
-  /* Красный «!» над иконкой доски, пока есть непросмотренные объявления */
+  
   .badge {
     position: absolute;
     top: 0;
@@ -978,20 +990,19 @@
     #welcome .seal { margin-top: 24px; }
     .timer { margin-top: 24px; }
     .event-date { margin-top: 24px; }
-    .screen { padding-bottom: calc(var(--safe-bottom) + 130px); }
   }
   @media (max-width: 360px) {
     .screen { padding-left: 16px; padding-right: 16px; }
     .bubble { max-width: calc(100% - 52px); }
     .reactions { padding-left: 0; }
     .timer .lbl { font-size: 12px; }
-
   }
   @media (orientation: landscape) and (max-height: 500px) {
-    .screen { padding-top: calc(var(--safe-top) + 10px); padding-bottom: calc(var(--safe-bottom) + 120px); }
+    .screen { padding-top: calc(var(--safe-top) + 10px); }
     #welcome h1 { font-size: 28px; }
     #welcome .seal { font-size: 56px; margin-top: 16px; }
     .dock { height: 84px; }
+    :root { --dock-height: 84px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1315,9 +1326,6 @@
 
 <script>
 (function () {
-  /* =========================================================
-     Адрес сервера (Cloudflare Worker)
-     ========================================================= */
   const WORKER = 'https://tyulen-bot.markbartolomeev.workers.dev';
   const TOKEN_KEY = 'tyulenchik.token.v2';
   const THEME_KEY = 'tyulenchik.theme';
@@ -1340,7 +1348,6 @@
     'Сервер думает, как и мы…',
   ];
   const REACTIONS = ['👍', '👎', '❤️', '🤬', '💩'];
-  // 9 стандартных цветов
   const PALETTE = [
     ['#e53935', 'красный'], ['#fb8c00', 'оранжевый'], ['#fdd835', 'желтый'],
     ['#43a047', 'зеленый'], ['#4fc3f7', 'голубой'], ['#1e88e5', 'синий'],
@@ -1376,7 +1383,6 @@
 
   const pad2 = n => String(n).padStart(2, '0');
 
-  /* ---------- Тема ---------- */
   const themeMeta = $('themeMeta');
   function applyTheme(dark) {
     html.setAttribute('data-theme', dark ? 'dark' : 'light');
@@ -1393,7 +1399,6 @@
   });
   try { applyTheme(localStorage.getItem(THEME_KEY) === 'dark'); } catch (_) {}
 
-  /* ---------- Сеть ---------- */
   async function api(method, path, body, token) {
     const headers = {};
     if (body) headers['Content-Type'] = 'application/json';
@@ -1433,7 +1438,6 @@
     } catch (_) { me = null; }
   }
 
-  /* ---------- Ожидание ответа Telegram (с надписями через 30 секунд) ---------- */
   let cancelWait = null;
   let phraseDelay = null;
   let phraseTick = null;
@@ -1446,14 +1450,14 @@
     const el = $('waitPhrase');
     el.classList.remove('hidden');
     el.style.animation = 'none';
-    el.offsetHeight; // перезапуск анимации
+    el.offsetHeight;
     el.style.animation = '';
     el.textContent = PHRASES[i];
   }
 
   function showWait(text) {
     $('waitText').textContent = text;
-    if (!$('waitOverlay').hidden) return; // уже ждём: только меняем текст
+    if (!$('waitOverlay').hidden) return;
     $('waitPhrase').classList.add('hidden');
     $('waitOverlay').hidden = false;
     clearTimeout(phraseDelay);
@@ -1492,7 +1496,6 @@
     });
   }
 
-  /* ---------- Загрузка: всё загрузить, потом показать ---------- */
   const textureUrls = [];
   tabEls.forEach(t => textureUrls.push(t.dataset.normal, t.dataset.selected));
   textureUrls.push(TG_ICON, SEAL_ICON);
@@ -1524,7 +1527,6 @@
     refreshProfileUI();
   });
 
-  /* ---------- Шкала ---------- */
   tabEls.forEach(t => {
     const img = t.querySelector('img');
     img.addEventListener('error', () => img.classList.add('broken'));
@@ -1593,7 +1595,6 @@
   });
   window.addEventListener('resize', () => { if (!dragging) snapLens(); });
 
-  /* ---------- Отсчёт до 1 декабря ---------- */
   const dEl = $('d'), hEl = $('h'), mEl = $('m'), sEl = $('s');
   const dateEl = $('eventDate');
 
@@ -1621,7 +1622,6 @@
   tick();
   setInterval(tick, 1000);
 
-  /* ---------- Безопасное форматирование текста ---------- */
   function sanitize(src) {
     const map = {
       strong: 'b', b: 'b', em: 'i', i: 'i', u: 'u', strike: 's', s: 's', del: 's',
@@ -1651,7 +1651,6 @@
     return (0.299 * r + 0.587 * g + 0.114 * b) < 140;
   }
 
-  /* ---------- Доска ---------- */
   const feed = $('feed');
 
   function fmtDate(ts) {
@@ -1678,7 +1677,6 @@
     } catch (_) {}
   }
 
-  // Доска открыта: отмечаем объявления просмотренными
   async function markSeen() {
     if (!getToken() || !me) return;
     try {
@@ -1692,7 +1690,6 @@
     } catch (_) {}
   }
 
-  /* Доска открывается сверху; стрелка показывает непрочитанные ниже */
   let jumpSnapshot = [];
   const boardScreen = document.querySelector('.screen[data-screen="board"]');
 
@@ -1832,13 +1829,11 @@
     updateJump();
   }
 
-  // Открыть скрытый текст нажатием
   feed.addEventListener('click', e => {
     const sp = e.target.closest && e.target.closest('tg-spoiler');
     if (sp && feed.contains(sp)) sp.classList.toggle('open');
   });
 
-  /* ---------- Лимит: одно объявление в день ---------- */
   function renderLimit() {
     const writeBtn = $('writeBtn');
     const pill = $('limitBtn');
@@ -1867,7 +1862,6 @@
     openEditor(null);
   });
 
-  /* ---------- Реакции ---------- */
   async function react(id, emoji) {
     const token = getToken();
     if (!token || !me) return toast('Войдите в профиль, чтобы ставить реакции');
@@ -1975,7 +1969,6 @@
     }
   }
 
-  /* ---------- Окно объявления ---------- */
   const modal = $('modal');
   const editor = $('editor');
   const selBar = $('selBar');
@@ -2057,7 +2050,6 @@
   $('cancelBtn').addEventListener('click', closeModal);
   modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 
-  // Панель оформления появляется над выделенным текстом
   function updateSelBar() {
     const sel = window.getSelection();
     if (modal.hidden || !sel || sel.rangeCount === 0 || sel.isCollapsed || !editor.contains(sel.anchorNode)) {
@@ -2082,7 +2074,6 @@
   document.addEventListener('selectionchange', updateSelBar);
   window.addEventListener('resize', updateSelBar);
 
-  // Обернуть выделение в тег (скрытый текст, цитата); повторное нажатие снимает оформление
   function toggleWrap(tag) {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
@@ -2118,7 +2109,6 @@
     });
   });
 
-  // Прикрепить фото
   $('photoBtn').addEventListener('click', () => $('postFile').click());
   $('postFile').addEventListener('change', () => {
     const f = $('postFile').files[0];
@@ -2129,7 +2119,6 @@
     });
   });
 
-  /* ---------- Кастомизация ---------- */
   function buildSwatches(containerId, key) {
     const box = $(containerId);
     box.textContent = '';
@@ -2175,7 +2164,6 @@
   $('custDone').addEventListener('click', () => { $('custModal').hidden = true; });
   $('custModal').addEventListener('click', e => { if (e.target === $('custModal')) $('custModal').hidden = true; });
 
-  /* ---------- Публикация ---------- */
   $('saveBtn').addEventListener('click', async () => {
     const text = sanitize(editor.innerHTML);
     if (!plainLength(text) && !postImage) return err('postErr', '✏️ Напишите текст или добавьте фото');
@@ -2217,7 +2205,6 @@
     }
   });
 
-  /* ---------- Профиль и состояние входа ---------- */
   function renderProfile(u) {
     $('pName').textContent = u.name;
     $('pApp').textContent = u.app;
@@ -2253,7 +2240,6 @@
     else if (res.status === 'expired') err(errId, expiredText);
   }
 
-  /* ---------- Виды входа ---------- */
   function showView(name) {
     currentView = name;
     const isReg = name === 'reg';
@@ -2270,7 +2256,6 @@
   $('tabReg').addEventListener('click', () => showView('reg'));
   $('tabLogin').addEventListener('click', () => showView('login'));
 
-  /* ---------- Подсказки «?» ---------- */
   function closeTips() {
     document.querySelectorAll('.tip').forEach(t => t.classList.add('hidden'));
     document.querySelectorAll('.help-btn').forEach(b => b.setAttribute('aria-expanded', 'false'));
@@ -2292,7 +2277,6 @@
     closeTips();
   });
 
-  /* ---------- Фото: квадрат, 256 пикселей ---------- */
   function toSquareDataUrl(file, cb) {
     if (!file || !file.type.startsWith('image/')) return;
     const reader = new FileReader();
@@ -2312,7 +2296,6 @@
     reader.readAsDataURL(file);
   }
 
-  /* ---------- Регистрация ---------- */
   const reg = { step: 1, name: '', app: '', avatar: '' };
   const TOTAL = 4;
 
@@ -2390,7 +2373,6 @@
     }
   });
 
-  /* ---------- Вход ---------- */
   $('loginBtn').addEventListener('click', async () => {
     const app = $('loginApp').value.trim();
     if (!APP_RE.test(app)) return err('loginErr', '🔍 Введите ваш TulenID');
@@ -2421,7 +2403,6 @@
     }
   });
 
-  /* ---------- Забыли TulenID ---------- */
   $('forgotBtn').addEventListener('click', () => showView('forgot'));
   $('forgotBack').addEventListener('click', () => showView('login'));
 
@@ -2495,7 +2476,6 @@
     }
   });
 
-  /* ---------- Профиль: фото, редактирование, выход ---------- */
   async function saveProfile(fields) {
     const r = await api('POST', '/profile', fields, getToken());
     if (r.ok) { me = r.data.user; renderProfile(me); loadBoard(); return { ok: true }; }
@@ -2523,7 +2503,6 @@
     });
   });
 
-  // Редактирование: имя меняется сразу; новый TulenID — только после подтверждения в боте
   $('editBtn').addEventListener('click', () => {
     if (!me) return;
     $('editName').value = me.name;
@@ -2579,7 +2558,6 @@
     }
   });
 
-  /* ---------- Остальные переключатели (визуальные) ---------- */
   document.querySelectorAll('.settings .switch:not(#themeSwitch)').forEach(sw => {
     sw.addEventListener('click', () => {
       const on = !sw.classList.contains('on');
@@ -2588,9 +2566,7 @@
     });
   });
 
-  /* ---------- Старт ---------- */
   showView('reg');
-  // Бейдж «!» обновляется сам, пока открыто приложение
   setInterval(() => { if (getToken() && me && current !== 1) loadBoard(); }, 60000);
 })();
 </script>
