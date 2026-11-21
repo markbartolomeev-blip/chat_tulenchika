@@ -59,7 +59,8 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   /* Фон без полос: на весь экран, с запасом за края (чтобы не было синей полосы снизу) */
-  html { height: 100%; background: var(--bg-base); }
+  html { height: 100%; background: linear-gradient(160deg, #3b86c6, #4288cb, #3a7cbc, #3d8ac8); }
+  html[data-theme="dark"] { background: linear-gradient(160deg, #0b1f3f, #12305c, #0a1a36); }
   body {
     font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: #fff;
@@ -469,17 +470,17 @@
 
   .tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
   .tool-btn {
-    height: 50px;
+    min-height: 54px;
     border-radius: 16px;
     border: 2.5px solid #fff;
     background: var(--tool-bg);
     color: #fff;
-    font: 900 clamp(14px, 4.2vw, 16px) "Nunito", system-ui, sans-serif;
+    font: 900 clamp(13px, 3.9vw, 15px) "Nunito", system-ui, sans-serif;
+    line-height: 1.15;
     cursor: pointer;
-    padding: 0 8px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    padding: 8px 6px;
+    text-align: center;
+    white-space: normal;
   }
   .tool-btn:active { transform: translateY(2px); }
   .actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
@@ -948,6 +949,23 @@
     pointer-events: none;
   }
 
+  .jump-arrow {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(var(--safe-bottom) + 130px);
+    z-index: 25;
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 2.5px solid #fff;
+    background: rgba(26, 111, 196, .92);
+    color: #fff;
+    font: 900 14px "Nunito", system-ui, sans-serif;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0, 30, 70, .35);
+    animation: pop .25s ease both;
+  }
+
   :focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 
   /* ---------- Адаптация под разные экраны ---------- */
@@ -962,7 +980,7 @@
     .bubble { max-width: calc(100% - 52px); }
     .reactions { padding-left: 0; }
     .timer .lbl { font-size: 12px; }
-    .tools { grid-template-columns: 1fr; }
+
   }
   @media (orientation: landscape) and (max-height: 500px) {
     .screen { padding-top: calc(var(--safe-top) + 10px); padding-bottom: calc(var(--safe-bottom) + 120px); }
@@ -1020,6 +1038,7 @@
     </button>
   </div>
   <div class="feed" id="feed"></div>
+  <button class="jump-arrow hidden" id="jumpBtn" type="button">⬇ Есть непрочитанные</button>
 </section>
 
 <!-- 3. Мессенджер -->
@@ -1532,7 +1551,7 @@
       const src = on ? t.dataset.selected : t.dataset.normal;
       if (img.getAttribute('src') !== src) img.setAttribute('src', src);
     });
-    if (TABS[i] === 'board') loadBoard();
+    if (TABS[i] === 'board') openBoard();
     if (!dragging) snapLens();
     else lens.style.opacity = 1;
   }
@@ -1649,7 +1668,6 @@
         unseen = r.data.unseen || 0;
         renderFeed();
         renderLimit();
-        if (current === 1) markSeen();
         updateBadge();
       }
     } catch (_) {}
@@ -1668,6 +1686,36 @@
       }
     } catch (_) {}
   }
+
+  /* Доска открывается сверху; стрелка показывает непрочитанные ниже */
+  let jumpSnapshot = [];
+  const boardScreen = document.querySelector('.screen[data-screen="board"]');
+
+  function updateJump() {
+    const limitY = window.innerHeight - 150;
+    const show = current === 1 && jumpSnapshot.length > 0 && jumpSnapshot.some(id => {
+      const el = feed.querySelector(`[data-id="${id}"]`);
+      return el && el.getBoundingClientRect().top > limitY;
+    });
+    $('jumpBtn').classList.toggle('hidden', !show);
+  }
+
+  async function openBoard() {
+    await loadBoard();
+    jumpSnapshot = posts.filter(p => !p.seen).map(p => p.id);
+    boardScreen.scrollTop = 0;
+    await markSeen();
+    updateJump();
+  }
+
+  $('jumpBtn').addEventListener('click', () => {
+    const limitY = window.innerHeight - 150;
+    const target = jumpSnapshot
+      .map(id => feed.querySelector(`[data-id="${id}"]`))
+      .find(el => el && el.getBoundingClientRect().top > limitY);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  boardScreen.addEventListener('scroll', updateJump, { passive: true });
 
   function applyOpts(bub, tx, opts) {
     if (!opts) return;
@@ -1688,9 +1736,10 @@
       feed.append(empty);
       return;
     }
-    posts.forEach(p => {
+    [...posts].reverse().forEach(p => {
       const art = document.createElement('article');
       art.className = 'post';
+      art.dataset.id = p.id;
 
       const row = document.createElement('div');
       row.className = 'post-row';
@@ -1775,6 +1824,7 @@
       art.append(row, rx);
       feed.append(art);
     });
+    updateJump();
   }
 
   // Открыть скрытый текст нажатием
@@ -2146,7 +2196,7 @@
         closeModal();
         if (!editingId) {
           const board = document.querySelector('.screen[data-screen="board"]');
-          board.scrollTop = board.scrollHeight;
+          board.scrollTop = 0;
         }
       } else if (r.status === 401) {
         toast('Сессия закончилась, войдите снова');
