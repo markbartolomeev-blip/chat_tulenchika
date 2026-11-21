@@ -59,8 +59,8 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   /* Фон без полос: на весь экран, с запасом за края (чтобы не было синей полосы снизу) */
-  html { height: 100%; background: linear-gradient(160deg, #3b86c6, #4288cb, #3a7cbc, #3d8ac8); }
-  html[data-theme="dark"] { background: linear-gradient(160deg, #0b1f3f, #12305c, #0a1a36); }
+  html { height: 100%; background-color: #3a7cbc; }
+  html[data-theme="dark"] { background-color: #0c2344; }
   body {
     font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: #fff;
@@ -77,8 +77,9 @@
     position: fixed;
     top: -60px;
     right: -60px;
-    bottom: -60px;
     left: -60px;
+    height: calc(100vh + 120px);
+    height: calc(100lvh + 120px);
     pointer-events: none;
   }
   body::before {
@@ -827,7 +828,7 @@
   .dock {
     position: fixed;
     left: 50%;
-    bottom: calc(var(--safe-bottom) + 14px);
+    bottom: 6px;
     transform: translateX(-50%);
     width: min(92vw, 440px);
     height: clamp(88px, 13vh, 102px);
@@ -955,12 +956,16 @@
     transform: translateX(-50%);
     bottom: calc(var(--safe-bottom) + 130px);
     z-index: 25;
-    padding: 9px 16px;
-    border-radius: 999px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
     border: 2.5px solid #fff;
     background: rgba(26, 111, 196, .92);
     color: #fff;
-    font: 900 14px "Nunito", system-ui, sans-serif;
+    font: 900 18px/1 "Nunito", system-ui, sans-serif;
     cursor: pointer;
     box-shadow: 0 6px 16px rgba(0, 30, 70, .35);
     animation: pop .25s ease both;
@@ -1038,7 +1043,7 @@
     </button>
   </div>
   <div class="feed" id="feed"></div>
-  <button class="jump-arrow hidden" id="jumpBtn" type="button">⬇ Есть непрочитанные</button>
+  <button class="jump-arrow hidden" id="jumpBtn" type="button" aria-label="Есть непрочитанные объявления ниже">⬇</button>
 </section>
 
 <!-- 3. Мессенджер -->
@@ -1702,7 +1707,7 @@
 
   async function openBoard() {
     await loadBoard();
-    jumpSnapshot = posts.filter(p => !p.seen).map(p => p.id);
+    jumpSnapshot = posts.filter(p => p.seen === false).map(p => p.id);
     boardScreen.scrollTop = 0;
     await markSeen();
     updateJump();
