@@ -38,6 +38,7 @@
     --switch-off: rgba(255, 255, 255, .85);
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --dock-height: clamp(88px, 13vh, 102px);
   }
   html[data-theme="dark"] {
     --bg-base: #0b1f3f;
@@ -62,57 +63,51 @@
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* Фон без полос: на весь экран, с запасом за края (чтобы не было синей полосы снизу) */
-  html { height: 100%; background-color: #3a7cbc; }
-  html[data-theme="dark"] { background-color: #0c2344; }
+  /* Фон рисуется прямо на html и заливает весь экран.
+     Высоту --app-h задаёт JS: это реальная высота экрана, а не окна браузера. */
+  html {
+    width: 100%;
+    height: var(--app-h, 100%);
+    margin: 0;
+    padding: 0;
+    overscroll-behavior: none;
+    background-color: var(--bg-base);
+    background-image:
+      radial-gradient(circle at 30% 28%, rgba(190, 236, 255, .30), transparent 42%),
+      radial-gradient(circle at 72% 74%, rgba(20, 70, 150, .30), transparent 48%),
+      var(--bg-grad);
+    background-size: 100% 100%, 100% 100%, 300% 300%;
+    background-repeat: no-repeat;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  html[data-theme="dark"] {
+    background-color: #0c2344;
+    background-image:
+      radial-gradient(circle at 30% 28%, rgba(60, 120, 220, .20), transparent 42%),
+      radial-gradient(circle at 72% 74%, rgba(5, 15, 40, .45), transparent 48%),
+      var(--bg-grad);
+  }
+
   body {
     font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color: #fff;
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--app-h, 100%);
+    background: transparent;
     overflow: hidden;
     -webkit-user-select: none;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     -webkit-font-smoothing: antialiased;
   }
-  body::before, body::after {
-    content: "";
-    position: fixed;
-    top: -60px;
-    right: -60px;
-    left: -60px;
-    height: calc(100vh + 120px);
-    height: calc(100lvh + 120px);
-    pointer-events: none;
-  }
-  body::before {
-    z-index: -2;
-    background: var(--bg-grad);
-    background-size: 300% 300%;
-    animation: drift 18s ease-in-out infinite alternate;
-  }
-  body::after {
-    z-index: -1;
-    background:
-      radial-gradient(circle at 30% 28%, rgba(190, 236, 255, .30), transparent 42%),
-      radial-gradient(circle at 72% 74%, rgba(20, 70, 150, .30), transparent 48%);
-    background-size: 160% 160%;
-    animation: bloom 24s ease-in-out infinite alternate;
-  }
-  html[data-theme="dark"] body::after {
-    background:
-      radial-gradient(circle at 30% 28%, rgba(60, 120, 220, .20), transparent 42%),
-      radial-gradient(circle at 72% 74%, rgba(5, 15, 40, .45), transparent 48%);
-  }
+
   @keyframes drift {
-    0%   { background-position: 0% 50%; }
-    50%  { background-position: 100% 40%; }
-    100% { background-position: 60% 100%; }
-  }
-  @keyframes bloom {
-    0%   { background-position: 0% 0%; }
-    100% { background-position: 100% 100%; }
+    0%   { background-position: 0% 0%, 0% 0%, 0% 50%; }
+    50%  { background-position: 0% 0%, 0% 0%, 100% 40%; }
+    100% { background-position: 0% 0%, 0% 0%, 60% 100%; }
   }
   @keyframes bob {
     0%, 100% { transform: translateY(0) rotate(-3deg); }
@@ -131,20 +126,18 @@
   /* ---------- Загрузка ---------- */
   #loader {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--app-h, 100%);
     z-index: 100;
     display: grid;
     place-items: center;
     background: var(--bg-grad);
+    background-size: 300% 300%;
     transition: opacity .6s ease, visibility .6s ease;
   }
   #loader.hide { opacity: 0; visibility: hidden; }
-  #loader .seal-l {
-    font-size: clamp(64px, 22vw, 88px);
-    line-height: 1;
-    filter: drop-shadow(0 12px 14px rgba(0, 30, 70, .35));
-    animation: bob 2.4s ease-in-out infinite;
-  }
   #loader .ld-box {
     width: min(78vw, 340px);
     display: flex;
@@ -224,9 +217,10 @@
   .screen {
     position: fixed;
     top: 0;
-    bottom: 0;
+    height: var(--app-h, 100%);
     left: 50%;
     width: min(100%, 480px);
+    /* Сверху учитываем вырез, снизу оставляем место под плавающую шкалу */
     padding: calc(var(--safe-top) + 28px) 22px calc(var(--safe-bottom) + 150px);
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -514,7 +508,10 @@
   /* ---------- Окна ---------- */
   .modal {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--app-h, 100%);
     z-index: 50;
     display: flex;
     align-items: center;
@@ -900,13 +897,14 @@
   .switch.on::after { transform: translateX(calc(clamp(92px, 28vw, 110px) - 64px)); }
 
   /* ---------- Шкала (liquid glass) ---------- */
+  /* Привязана к реальной высоте экрана (--app-h), поэтому висит внизу и в режиме приложения */
   .dock {
     position: fixed;
     left: 50%;
-    bottom: 6px;
+    top: calc(var(--app-h, 100dvh) - var(--dock-height) - var(--safe-bottom) - 12px);
     transform: translateX(-50%);
     width: min(92vw, 440px);
-    height: clamp(88px, 13vh, 102px);
+    height: var(--dock-height);
     padding: 8px;
     border-radius: 36px;
     display: grid;
@@ -1059,17 +1057,16 @@
     .bubble { max-width: calc(100% - 52px); }
     .reactions { padding-left: 0; }
     .timer .lbl { font-size: 12px; }
-
   }
   @media (orientation: landscape) and (max-height: 500px) {
     .screen { padding-top: calc(var(--safe-top) + 10px); padding-bottom: calc(var(--safe-bottom) + 120px); }
     #welcome h1 { font-size: 28px; }
     #welcome .seal { font-size: 56px; margin-top: 16px; }
-    .dock { height: 84px; }
+    :root { --dock-height: 84px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    body::before, body::after, .seal, #loader .seal-l, .spinner { animation: none !important; }
+    html, .seal, #loader .seal-l, .spinner { animation: none !important; }
     .screen, .lens, .switch::after { transition: none !important; }
   }
 </style>
@@ -1455,6 +1452,30 @@
   const $ = id => document.getElementById(id);
 
   const html = document.documentElement;
+
+  /* ---------- Реальная высота экрана ----------
+     В режиме «На экран Домой» iOS может отдавать window.innerHeight короче
+     настоящего экрана. Берём высоту экрана и сохраняем её в --app-h. */
+  let appH = window.innerHeight;
+  function fitViewport() {
+    const standalone = navigator.standalone === true ||
+      (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+    let h = window.innerHeight;
+    if (standalone) {
+      const land = window.innerWidth > window.innerHeight;
+      const sh = land ? Math.min(screen.width, screen.height)
+                      : Math.max(screen.width, screen.height);
+      if (sh > h && sh - h < 150) h = sh;
+    }
+    appH = h;
+    html.style.setProperty('--app-h', h + 'px');
+  }
+  fitViewport();
+  window.addEventListener('resize', fitViewport);
+  window.addEventListener('orientationchange', () => setTimeout(fitViewport, 250));
+  window.addEventListener('pageshow', fitViewport);
+  document.addEventListener('visibilitychange', fitViewport);
+
   const dock = $('dock');
   const lens = $('lens');
   const welcome = $('welcome');
@@ -1635,8 +1656,8 @@
   }
 
   const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
-  const minDelay = new Promise(res => setTimeout(res, 700));
   const hardTimeout = new Promise(res => setTimeout(res, 9000));
+  const minDelay = new Promise(res => setTimeout(res, 700));
   const ldFill = $('ldFill');
   const ldPct = $('ldPct');
   const ldSeal = $('ldSeal');
@@ -1668,6 +1689,7 @@
     loader.classList.add('hide');
     setTimeout(() => { loader.style.display = 'none'; }, 700);
     refreshProfileUI();
+    fitViewport();
   });
 
   /* ---------- Шкала ---------- */
@@ -1844,7 +1866,7 @@
   const boardScreen = document.querySelector('.screen[data-screen="board"]');
 
   function updateJump() {
-    const limitY = window.innerHeight - 150;
+    const limitY = appH - 150;
     const show = current === 1 && jumpSnapshot.length > 0 && jumpSnapshot.some(id => {
       const el = feed.querySelector(`[data-id="${id}"]`);
       return el && el.getBoundingClientRect().top > limitY;
@@ -1861,7 +1883,7 @@
   }
 
   $('jumpBtn').addEventListener('click', () => {
-    const limitY = window.innerHeight - 150;
+    const limitY = appH - 150;
     const target = jumpSnapshot
       .map(id => feed.querySelector(`[data-id="${id}"]`))
       .find(el => el && el.getBoundingClientRect().top > limitY);
@@ -2072,7 +2094,7 @@
     if (top < 10) top = r.bottom + 10;
     picker.style.left = left + 'px';
     picker.style.top = top + 'px';
-    if (navigator.vibrate) navigator.vibrate(12);
+    buzz();
   }
 
   function bindPress(el, post) {
