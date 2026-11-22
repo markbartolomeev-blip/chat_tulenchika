@@ -1,0 +1,2823 @@
+<!DOCTYPE html>
+<html lang="ru" class="is-loading" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4f9bd9" id="themeMeta">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Чат Тюленчика">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="https://i.postimg.cc/cJT7NQTg/B57414E5-0B7C-4480-8F05-23FEBE4F3E27.png">
+<link rel="icon" href="https://i.postimg.cc/cJT7NQTg/B57414E5-0B7C-4480-8F05-23FEBE4F3E27.png">
+<title>Чат Тюленчика</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Цвета: светлая и тёмная (тёмно-синяя) темы ---------- */
+  :root {
+    --bg-base: #4a92cc;
+    --bg-grad: linear-gradient(120deg, #3b86c6, #4f9bd9, #3a7cbc, #5fb0e6, #4288cb, #3d8ac8);
+    --card-bg: rgba(255, 255, 255, .16);
+    --sheet-bg: rgba(40, 110, 200, .55);
+    --field-bg: rgba(255, 255, 255, .14);
+    --tool-bg: rgba(255, 255, 255, .22);
+    --bubble-bg: linear-gradient(160deg, #ffffff 0%, #f4fbff 42%, #cdeeff 100%);
+    --bubble-text: #0b3d74;
+    --bubble-line: rgba(11, 61, 116, .35);
+    --bubble-border: rgba(255, 255, 255, .95);
+    --bubble-glow: rgba(120, 200, 255, .35);
+    --chip-bg: rgba(255, 255, 255, .75);
+    --chip-border: #5aaee6;
+    --chip-text: #0b3d74;
+    --dock-bg: linear-gradient(165deg, rgba(255, 255, 255, .46), rgba(170, 225, 255, .14) 42%, rgba(255, 255, 255, .26));
+    --btn-bg: #fff;
+    --btn-text: #1a6fc4;
+    --switch-off: rgba(255, 255, 255, .85);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html[data-theme="dark"] {
+    --bg-base: #0b1f3f;
+    --bg-grad: linear-gradient(120deg, #0b1f3f, #12305c, #0a1a36, #1a3d6e, #0d2249, #102a52);
+    --card-bg: rgba(120, 170, 255, .10);
+    --sheet-bg: rgba(12, 40, 85, .88);
+    --field-bg: rgba(120, 170, 255, .12);
+    --tool-bg: rgba(120, 170, 255, .18);
+    --bubble-bg: linear-gradient(160deg, #1d3a6b 0%, #162d56 55%, #10234a 100%);
+    --bubble-text: #eaf4ff;
+    --bubble-line: rgba(234, 244, 255, .3);
+    --bubble-border: rgba(150, 200, 255, .55);
+    --bubble-glow: rgba(90, 160, 255, .25);
+    --chip-bg: rgba(30, 60, 110, .8);
+    --chip-border: #4f8fd6;
+    --chip-text: #eaf4ff;
+    --dock-bg: linear-gradient(165deg, rgba(30, 70, 130, .55), rgba(10, 30, 70, .35) 45%, rgba(30, 70, 130, .5));
+    --btn-bg: #1d4f9c;
+    --btn-text: #fff;
+    --switch-off: rgba(200, 220, 255, .55);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* Фон без полос: на весь экран, с запасом за края (чтобы не было синей полосы снизу) */
+  html { height: 100%; background-color: #3a7cbc; }
+  html[data-theme="dark"] { background-color: #0c2344; }
+  body {
+    font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: #fff;
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before, body::after {
+    content: "";
+    position: fixed;
+    top: -60px;
+    right: -60px;
+    left: -60px;
+    height: calc(100vh + 120px);
+    height: calc(100lvh + 120px);
+    pointer-events: none;
+  }
+  body::before {
+    z-index: -2;
+    background: var(--bg-grad);
+    background-size: 300% 300%;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  body::after {
+    z-index: -1;
+    background:
+      radial-gradient(circle at 30% 28%, rgba(190, 236, 255, .30), transparent 42%),
+      radial-gradient(circle at 72% 74%, rgba(20, 70, 150, .30), transparent 48%);
+    background-size: 160% 160%;
+    animation: bloom 24s ease-in-out infinite alternate;
+  }
+  html[data-theme="dark"] body::after {
+    background:
+      radial-gradient(circle at 30% 28%, rgba(60, 120, 220, .20), transparent 42%),
+      radial-gradient(circle at 72% 74%, rgba(5, 15, 40, .45), transparent 48%);
+  }
+  @keyframes drift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 40%; }
+    100% { background-position: 60% 100%; }
+  }
+  @keyframes bloom {
+    0%   { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50%      { transform: translateY(-10px) rotate(3deg); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(.92); }
+    to   { opacity: 1; transform: none; }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ---------- Загрузка ---------- */
+  #loader {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    background: var(--bg-grad);
+    transition: opacity .6s ease, visibility .6s ease;
+  }
+  #loader.hide { opacity: 0; visibility: hidden; }
+  #loader .seal-l {
+    font-size: clamp(64px, 22vw, 88px);
+    line-height: 1;
+    filter: drop-shadow(0 12px 14px rgba(0, 30, 70, .35));
+    animation: bob 2.4s ease-in-out infinite;
+  }
+  #loader .ld-box {
+    width: min(78vw, 340px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    text-align: center;
+  }
+  #loader .ld-title {
+    font-size: clamp(24px, 7.5vw, 30px);
+    font-weight: 900;
+    letter-spacing: .5px;
+    text-shadow: 0 3px 0 rgba(0, 40, 90, .22);
+  }
+  #loader .ld-pct {
+    font-size: clamp(18px, 5.6vw, 22px);
+    font-weight: 900;
+    opacity: .95;
+  }
+  #loader .ld-track {
+    position: relative;
+    width: 100%;
+    height: 18px;
+    margin-top: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .35);
+    box-shadow: inset 0 2px 4px rgba(0, 30, 70, .25);
+  }
+  #loader .ld-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #1e88e5, #4fc3f7, #0d47a1, #4fc3f7, #1e88e5);
+    background-size: 200% 100%;
+    animation: flow 1.4s linear infinite;
+    transition: width .35s ease;
+  }
+  #loader .ld-seal {
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    transform: translate(-50%, -62%);
+    font-size: 30px;
+    line-height: 1;
+    filter: drop-shadow(0 4px 6px rgba(0, 30, 70, .35));
+    transition: left .35s ease;
+  }
+  @keyframes flow {
+    from { background-position: 0 0; }
+    to   { background-position: -200% 0; }
+  }
+
+  /* Декоративные серебряные звёзды: чуть покачиваются */
+  .star {
+    position: absolute;
+    z-index: -1;
+    width: var(--w, 12vw);
+    height: auto;
+    pointer-events: none;
+    filter: drop-shadow(0 8px 10px rgba(0, 30, 70, .25));
+    animation: starFloat 4.6s ease-in-out infinite alternate;
+    animation-delay: var(--d, 0s);
+  }
+  @keyframes starFloat {
+    from { transform: translateY(0) rotate(0deg); }
+    to   { transform: translateY(-7px) rotate(4deg); }
+  }
+
+  html.is-loading .screen,
+  html.is-loading .screen.active,
+  html.is-loading .dock { opacity: 0; visibility: hidden; }
+
+  /* ---------- Экраны ---------- */
+  .screen {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: min(100%, 480px);
+    padding: calc(var(--safe-top) + 28px) 22px calc(var(--safe-bottom) + 150px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, 14px);
+    transition: opacity .45s ease, transform .45s ease, visibility .45s;
+    -webkit-user-select: text;
+    user-select: text;
+    scrollbar-width: none;
+  }
+  .screen::-webkit-scrollbar { display: none; }
+  .screen.active { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+  .hidden { display: none !important; }
+
+  .file-hidden {
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  .round-btn {
+    flex: 0 0 auto;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    background: rgba(255, 255, 255, .22);
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 5px 0 rgba(0, 30, 70, .18);
+    transition: transform .15s ease;
+  }
+  .round-btn:active { transform: scale(.94); }
+  .head-row { display: flex; justify-content: flex-end; align-items: center; min-height: 52px; width: 100%; }
+
+  .limit-pill {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 52px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 3px solid #dfe5ec;
+    background: #8e97a3;
+    color: #f4f6f9;
+    font: 900 14px "Nunito", system-ui, sans-serif;
+    cursor: not-allowed;
+    box-shadow: 0 5px 0 rgba(0, 30, 70, .18);
+  }
+  .limit-pill .lim-count {
+    background: rgba(255, 255, 255, .35);
+    border-radius: 999px;
+    padding: 2px 9px;
+  }
+  .limit-pill #limitTime { font-variant-numeric: tabular-nums; font-size: 13px; }
+
+  /* ---------- Приветствие ---------- */
+  #welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding-bottom: 150px;
+  }
+  #welcome h1 {
+    font-size: clamp(28px, 9.4vw, 58px);
+    font-weight: 900;
+    line-height: 1.02;
+    text-shadow: 0 4px 0 rgba(0, 40, 90, .22);
+    letter-spacing: .5px;
+  }
+  #welcome h1 .nowrap { white-space: nowrap; display: block; }
+  #welcome .sub {
+    margin-top: 18px;
+    font-size: clamp(18px, 5.6vw, 28px);
+    font-weight: 800;
+    line-height: 1.2;
+    text-shadow: 0 2px 0 rgba(0, 40, 90, .2);
+  }
+  #welcome .seal {
+    margin-top: 42px;
+    font-size: clamp(72px, 24vw, 104px);
+    line-height: 1;
+    filter: drop-shadow(0 12px 14px rgba(0, 30, 70, .35));
+    animation: bob 3.6s ease-in-out infinite;
+  }
+
+  /* ---------- Событие ---------- */
+  .event-title {
+    margin-top: 40px;
+    text-align: center;
+    font-size: clamp(24px, 7.4vw, 40px);
+    font-weight: 900;
+    line-height: 1.08;
+  }
+  .timer {
+    margin-top: clamp(28px, 7vh, 56px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: clamp(2px, 1.4vw, 6px);
+    font-variant-numeric: tabular-nums;
+  }
+  .timer .unit { display: flex; flex-direction: column; align-items: center; min-width: 0; flex: 1 1 0; }
+  .timer .num { font-size: clamp(34px, 11vw, 64px); font-weight: 900; line-height: 1; }
+  .timer .lbl { margin-top: 10px; font-size: clamp(13px, 4vw, 17px); font-weight: 900; }
+  .timer .sep { font-size: clamp(34px, 11vw, 64px); font-weight: 900; line-height: 1; margin-top: -2px; }
+  .event-date { margin-top: 44px; text-align: center; font-size: clamp(16px, 4.8vw, 20px); font-weight: 800; opacity: .85; }
+
+  /* ---------- Доска ---------- */
+  .feed { display: flex; flex-direction: column; gap: 22px; margin-top: 18px; }
+  .post { display: flex; flex-direction: column; gap: 6px; }
+  .post-row { display: flex; align-items: flex-end; gap: 12px; }
+  .avatar {
+    flex: 0 0 auto;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: #dcdcdc center/cover no-repeat;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, .8);
+  }
+  .avatar.empty::before, .avatar.empty::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+  }
+  .avatar.empty::before { width: 18px; height: 18px; top: 8px; border-radius: 50%; }
+  .avatar.empty::after  { width: 32px; height: 16px; bottom: -4px; border-radius: 50% 50% 0 0; }
+
+  .bubble {
+    position: relative;
+    min-width: 0;
+    flex: 1 1 auto;
+    max-width: calc(100% - 60px);
+    padding: 12px 18px 18px;
+    border-radius: 26px;
+    border: 2.5px solid var(--bubble-border);
+    background: var(--bubble-bg);
+    color: var(--bubble-text);
+    box-shadow:
+      0 6px 0 rgba(0, 30, 70, .16),
+      inset 0 2px 0 rgba(255, 255, 255, .6),
+      inset 0 -12px 22px var(--bubble-glow);
+    -webkit-touch-callout: none;
+  }
+  .bubble .meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 7px;
+    border-bottom: 2px dashed var(--bubble-line);
+    margin-bottom: 10px;
+  }
+  .bubble .author { font-size: 16px; font-weight: 900; word-break: break-word; }
+  .bubble .date { flex: 0 0 auto; font-size: 13px; font-weight: 700; opacity: .75; white-space: nowrap; }
+  .bubble .text {
+    font-size: clamp(17px, 5vw, 21px);
+    font-weight: 700;
+    line-height: 1.3;
+    white-space: pre-wrap;
+    word-break: break-word;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .bubble .text b, .editor b { font-weight: 900; }
+  .bubble .text i, .editor i { font-style: italic; }
+  .bubble .text u, .editor u { text-decoration: underline; }
+  .bubble .text s, .editor s { text-decoration: line-through; }
+  .bubble .text blockquote, .editor blockquote {
+    margin: 6px 0;
+    padding: 2px 0 2px 12px;
+    border-left: 4px solid currentColor;
+    opacity: .92;
+  }
+  /* Скрытый текст: закрыт, нажмите, чтобы открыть */
+  .bubble .text tg-spoiler, .editor tg-spoiler {
+    background: rgba(120, 135, 160, .8);
+    color: transparent;
+    border-radius: 6px;
+    padding: 0 3px;
+    cursor: pointer;
+  }
+  .bubble .text tg-spoiler.open { background: rgba(120, 135, 160, .18); color: inherit; }
+  .editor tg-spoiler { background: rgba(255, 255, 255, .28); }
+  .post-img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 18px;
+    margin-top: 10px;
+    border: 2px solid var(--bubble-line);
+  }
+  .views { margin-top: 8px; text-align: right; font-size: 12px; font-weight: 800; opacity: .7; }
+  .reactions { display: flex; flex-wrap: wrap; gap: 8px; padding-left: 58px; align-items: center; }
+  .rx {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    border: 2px solid var(--chip-border);
+    background: var(--chip-bg);
+    color: var(--chip-text);
+    font: 900 15px "Nunito", system-ui, sans-serif;
+    cursor: pointer;
+    transition: transform .12s ease, background .2s ease;
+  }
+  .rx:active { transform: scale(.92); }
+  .rx .emo { font-size: 16px; }
+  .rx.on { background: #1a6fc4; color: #fff; border-color: #1a6fc4; }
+  .act {
+    padding: 4px 11px;
+    border-radius: 999px;
+    border: 2px solid var(--chip-border);
+    background: var(--chip-bg);
+    color: var(--chip-text);
+    font: 900 13px "Nunito", system-ui, sans-serif;
+    cursor: pointer;
+  }
+  .act.del { border-color: #d6264a; color: #d6264a; }
+  .act-wrap { margin-left: auto; display: flex; gap: 8px; }
+  .feed-empty { text-align: center; font-size: 20px; font-weight: 800; margin-top: 60px; }
+
+  .picker {
+    position: fixed;
+    z-index: 45;
+    display: flex;
+    gap: 2px;
+    padding: 6px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .96);
+    border: 2px solid #5aaee6;
+    box-shadow: 0 10px 24px rgba(5, 30, 70, .35);
+    animation: pop .2s ease both;
+  }
+  html[data-theme="dark"] .picker { background: rgba(22, 45, 86, .97); border-color: #4f8fd6; }
+  .picker button {
+    width: 46px;
+    height: 46px;
+    border: none;
+    background: transparent;
+    font-size: 26px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: transform .12s ease, background .2s ease;
+  }
+  .picker button:active { transform: scale(.85); }
+  .picker button.sel { background: rgba(26, 111, 196, .25); box-shadow: inset 0 0 0 2px #1a6fc4; }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    top: calc(var(--safe-top) + 14px);
+    transform: translate(-50%, -20px);
+    z-index: 80;
+    width: max-content;
+    max-width: calc(100% - 40px);
+    padding: 10px 16px;
+    border-radius: 16px;
+    background: rgba(214, 38, 74, .9);
+    border: 2px solid #fff;
+    font-size: 15px;
+    font-weight: 900;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---------- Окна ---------- */
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(16px, var(--safe-top)) 16px max(16px, var(--safe-bottom));
+    background: rgba(5, 25, 60, .4);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: fade .2s ease both;
+  }
+  .modal[hidden] { display: none; }
+  .modal.top { z-index: 55; }
+  .sheet {
+    width: min(100%, 420px);
+    max-height: 100%;
+    overflow-y: auto;
+    background: var(--sheet-bg);
+    border: 2.5px solid rgba(255, 255, 255, .9);
+    border-radius: 28px;
+    padding: 22px;
+    box-shadow: 0 10px 0 rgba(0, 20, 50, .2);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    scrollbar-width: none;
+    animation: pop .3s ease both;
+  }
+  .sheet::-webkit-scrollbar { display: none; }
+  .sheet h3 { font-size: clamp(20px, 6vw, 24px); font-weight: 900; margin-bottom: 14px; text-align: center; }
+
+  .tools { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .tool-btn {
+    min-height: 54px;
+    border-radius: 16px;
+    border: 2.5px solid #fff;
+    background: var(--tool-bg);
+    color: #fff;
+    font: 900 clamp(13px, 3.9vw, 15px) "Nunito", system-ui, sans-serif;
+    line-height: 1.15;
+    cursor: pointer;
+    padding: 8px 6px;
+    text-align: center;
+    white-space: normal;
+  }
+  .tool-btn:active { transform: translateY(2px); }
+  .actions-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+
+  .sel-bar {
+    position: fixed;
+    z-index: 70;
+    display: none;
+    gap: 5px;
+    padding: 6px;
+    border-radius: 16px;
+    background: var(--sheet-bg);
+    border: 2px solid rgba(255, 255, 255, .9);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 8px 20px rgba(5, 25, 60, .35);
+  }
+  .sel-bar.show { display: flex; animation: pop .15s ease both; }
+  .fmt {
+    width: 38px;
+    height: 36px;
+    border-radius: 11px;
+    border: 2px solid #fff;
+    background: rgba(255, 255, 255, .18);
+    color: #fff;
+    font: 900 16px "Nunito", system-ui, sans-serif;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: transform .12s ease, background .2s ease;
+  }
+  .fmt:active { transform: scale(.9); background: rgba(255, 255, 255, .4); }
+  .fmt.i { font-style: italic; }
+  .fmt.u { text-decoration: underline; }
+  .fmt.s { text-decoration: line-through; }
+
+  .editor {
+    width: 100%;
+    min-height: 170px;
+    max-height: 40dvh;
+    overflow-y: auto;
+    border: 2.5px solid rgba(255, 255, 255, .9);
+    border-radius: 22px;
+    padding: 14px 16px;
+    font: 700 clamp(17px, 5vw, 19px)/1.3 "Nunito", system-ui, sans-serif;
+    color: #fff;
+    background: var(--field-bg);
+    outline: none;
+    white-space: pre-wrap;
+    word-break: break-word;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  .editor:empty::before { content: attr(data-placeholder); opacity: .7; }
+
+  .img-preview { position: relative; margin-top: 12px; }
+  .img-preview img { display: block; max-width: 100%; max-height: 180px; border-radius: 16px; border: 2px solid #fff; }
+  .img-preview .x {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background: rgba(0, 20, 50, .6);
+    color: #fff;
+    font-weight: 900;
+    cursor: pointer;
+  }
+  .opts-line { margin-top: 10px; font-size: 13px; font-weight: 800; opacity: .9; text-align: center; min-height: 18px; }
+
+  /* Кастомизация */
+  .cust-title { font-size: 15px; font-weight: 900; margin: 14px 0 8px; }
+  .swatches { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; }
+  .sw {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, .9);
+    cursor: pointer;
+    padding: 0;
+  }
+  .sw.sel { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #1a6fc4; }
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+    font-size: 17px;
+    font-weight: 900;
+  }
+  .toggle-row .switch { width: 74px; height: 42px; }
+  .toggle-row .switch::after { width: 34px; height: 34px; top: 4px; left: 4px; }
+  .toggle-row .switch.on::after { transform: translateX(32px); }
+
+  .field-label { display: block; font-size: 16px; font-weight: 900; margin: 14px 0 6px; }
+  .hint-note { font-size: 13px; font-weight: 800; opacity: .85; margin-top: 6px; line-height: 1.3; }
+
+  .tip {
+    margin: 10px auto 0;
+    max-width: 320px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .95);
+    color: #0b3d74;
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1.3;
+    text-align: center;
+    animation: pop .2s ease both;
+  }
+  .tip-foot { margin-top: 6px; font-size: 13px; font-style: italic; font-weight: 800; opacity: .85; }
+
+  /* Ожидание */
+  .wait-sheet { text-align: center; }
+  .spinner { font-size: 56px; margin: 6px 0; display: inline-block; animation: spin 2.4s linear infinite; }
+  .wait-text { font-size: 19px; font-weight: 900; line-height: 1.35; }
+  .phrase {
+    margin-top: 14px;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.35;
+    min-height: 44px;
+    animation: fade .6s ease both;
+  }
+
+  /* ---------- Мессенджер ---------- */
+  #messenger { position: relative; text-align: center; height: 100%; }
+  #messenger > * { position: absolute; left: 0; right: 0; width: auto; margin: 0; }
+  #messenger .icons { top: 13vh; font-size: clamp(40px, 12vw, 72px); line-height: 1.1; filter: drop-shadow(0 8px 10px rgba(0, 30, 70, .3)); }
+  #messenger h2 {
+    top: 22vh;
+    font-size: clamp(30px, 10vw, 60px);
+    font-weight: 900;
+    line-height: 1.1;
+    text-shadow: 0 4px 0 rgba(0, 40, 90, .22);
+  }
+  #messenger p {
+    top: 40vh;
+    font-size: clamp(18px, 5.6vw, 34px);
+    font-weight: 900;
+    line-height: 1.3;
+    text-shadow: 0 2px 0 rgba(0, 40, 90, .2);
+  }
+  #messenger p.note { top: 63vh; }
+
+  /* ---------- Профиль и вход ---------- */
+  .block-title { font-size: clamp(22px, 6.5vw, 26px); font-weight: 900; text-align: center; margin-bottom: 14px; text-shadow: 0 3px 0 rgba(0, 40, 90, .2); }
+  .card {
+    width: 100%;
+    background: var(--card-bg);
+    border: 2.5px solid rgba(255, 255, 255, .9);
+    border-radius: 26px;
+    padding: 20px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 6px 0 rgba(0, 30, 70, .16);
+  }
+  .progress { font-size: 14px; font-weight: 900; opacity: .9; margin-bottom: 4px; }
+  .step-title { font-size: clamp(20px, 6vw, 22px); font-weight: 900; margin-bottom: 4px; }
+  .small { font-size: 13px; font-weight: 800; opacity: .85; margin-top: 6px; line-height: 1.3; }
+
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-bottom: 16px; }
+  .tab-auth {
+    font: 900 clamp(15px, 4.4vw, 17px) "Nunito", system-ui, sans-serif;
+    color: #fff;
+    background: rgba(255, 255, 255, .12);
+    border: 2.5px solid rgba(255, 255, 255, .7);
+    border-radius: 18px;
+    padding: 12px 8px;
+    cursor: pointer;
+  }
+  .tab-auth.on { background: var(--btn-bg); color: var(--btn-text); }
+
+  .fl-row { display: flex; align-items: center; gap: 8px; margin: 14px 0 6px; }
+  .fl-row .fl-text { font-size: 16px; font-weight: 900; flex: 1 1 auto; }
+  .tg-ico { width: 24px; height: 24px; object-fit: contain; border-radius: 6px; pointer-events: none; flex: 0 0 auto; }
+  .qbtn {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background: #fff;
+    color: #1a6fc4;
+    font: 900 16px "Nunito", system-ui, sans-serif;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+  }
+  .bang {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    color: #d6264a;
+    font-size: 15px;
+    font-weight: 900;
+    flex: 0 0 auto;
+  }
+  .tg-warn {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(214, 38, 74, .32);
+    border: 2px solid rgba(255, 255, 255, .85);
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 1.35;
+  }
+  .tg-warn a { color: #fff; font-weight: 900; text-decoration: underline; }
+  .tg-warn .bang { margin-top: 1px; }
+
+  .link-btn {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    background: none;
+    border: none;
+    color: #fff;
+    font: 900 16px "Nunito", system-ui, sans-serif;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 6px;
+  }
+
+  input[type=text] {
+    width: 100%;
+    font: 800 18px "Nunito", system-ui, sans-serif;
+    color: #fff;
+    background: var(--field-bg);
+    border: 2.5px dashed rgba(255, 255, 255, .85);
+    border-radius: 16px;
+    padding: 12px 14px;
+    outline: none;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  input[type=text]::placeholder { color: rgba(255, 255, 255, .7); }
+  input[type=text]:focus { border-style: solid; }
+
+  .btn {
+    width: 100%;
+    margin-top: 16px;
+    font: 900 clamp(16px, 4.8vw, 18px) "Nunito", system-ui, sans-serif;
+    color: var(--btn-text);
+    background: var(--btn-bg);
+    border: 2.5px solid #fff;
+    border-radius: 18px;
+    padding: 14px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 rgba(0, 20, 50, .22);
+  }
+  .btn:active { transform: translateY(2px); box-shadow: 0 3px 0 rgba(0, 20, 50, .22); }
+  .btn.ghost { background: rgba(255, 255, 255, .14); color: #fff; }
+  .btn:disabled { opacity: .6; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .err {
+    color: #fff;
+    background: rgba(200, 30, 60, .5);
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin-top: 12px;
+    font-weight: 800;
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .photo-pick {
+    width: min(170px, 46vw);
+    height: min(170px, 46vw);
+    border-radius: 50%;
+    margin: 14px auto 0;
+    border: 3px dashed #fff;
+    background: rgba(255, 255, 255, .14) center/cover no-repeat;
+    display: grid; place-items: center;
+    cursor: pointer;
+    font-size: 44px;
+    overflow: hidden;
+  }
+  .photo-pick.has { border-style: solid; }
+
+  .profile { text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .photo {
+    width: min(160px, 42vw);
+    height: min(160px, 42vw);
+    border-radius: 50%;
+    margin: 6px auto 0;
+    border: 3px solid #fff;
+    background: #dadada center/cover no-repeat;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    box-shadow: 0 10px 22px rgba(0, 30, 70, .25);
+  }
+  .photo.empty::before, .photo.empty::after {
+    content: ""; position: absolute; left: 50%; transform: translateX(-50%); background: #fff;
+  }
+  .photo.empty::before { width: 40%; height: 40%; border-radius: 50%; top: 14%; }
+  .photo.empty::after  { width: 70%; height: 38%; border-radius: 50% 50% 0 0; bottom: -8%; }
+  .p-name { font-size: clamp(24px, 7.5vw, 30px); font-weight: 900; margin-top: 16px; line-height: 1.1; }
+  .app-line { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; font-size: clamp(18px, 5.5vw, 22px); font-weight: 900; }
+  .app-ico { width: 30px; height: 30px; object-fit: contain; }
+  .app-cap { font-size: 13px; font-weight: 800; opacity: .85; margin-top: 2px; }
+  .p-row { font-size: 17px; font-weight: 800; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+  .p-row b { font-weight: 900; }
+
+  .settings { margin-top: 30px; display: grid; grid-template-columns: auto auto; column-gap: 22px; row-gap: 26px; align-items: center; justify-content: center; }
+  .setting { display: contents; }
+  .setting span { font-size: clamp(20px, 6vw, 30px); font-weight: 900; text-align: left; }
+  .switch {
+    flex: 0 0 auto;
+    width: clamp(92px, 28vw, 110px);
+    height: 64px;
+    border-radius: 40px;
+    border: none;
+    background: var(--switch-off);
+    position: relative;
+    cursor: pointer;
+    box-shadow: inset 0 3px 6px rgba(0, 20, 50, .18);
+    transition: background .3s ease;
+  }
+  .switch::after {
+    content: "";
+    position: absolute;
+    top: 6px; left: 6px;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 3px 8px rgba(0, 20, 50, .3);
+    transition: transform .3s cubic-bezier(.3, 1.3, .5, 1);
+  }
+  .switch.on { background: #4f74d9; }
+  .switch.on::after { transform: translateX(calc(clamp(92px, 28vw, 110px) - 64px)); }
+
+  /* ---------- Шкала (liquid glass) ---------- */
+  .dock {
+    position: fixed;
+    left: 50%;
+    bottom: 6px;
+    transform: translateX(-50%);
+    width: min(92vw, 440px);
+    height: clamp(88px, 13vh, 102px);
+    padding: 8px;
+    border-radius: 36px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    z-index: 20;
+    touch-action: none;
+    cursor: grab;
+    outline: none;
+    background: var(--dock-bg);
+    backdrop-filter: blur(20px) saturate(190%);
+    -webkit-backdrop-filter: blur(20px) saturate(190%);
+    border: 1.5px solid rgba(255, 255, 255, .6);
+    box-shadow:
+      inset 0 2px 1px rgba(255, 255, 255, .75),
+      inset 0 -12px 24px rgba(120, 200, 255, .28),
+      inset 2px 0 6px rgba(255, 255, 255, .25),
+      inset -2px 0 6px rgba(255, 255, 255, .25),
+      0 20px 40px rgba(5, 30, 70, .35);
+    transition: transform .35s cubic-bezier(.3, 1.3, .5, 1), box-shadow .3s ease, opacity .6s ease;
+  }
+  .dock.pressed { transform: translateX(-50%) scale(1.03); cursor: grabbing; }
+  .dock::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(120% 70% at 18% 0%, rgba(255, 255, 255, .6), transparent 55%);
+    pointer-events: none;
+  }
+  .lens {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    left: 8px;
+    width: calc((100% - 16px) / 4);
+    border-radius: 28px;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(circle at 32% 18%, rgba(255, 255, 255, .95), rgba(255, 255, 255, .3) 55%, rgba(190, 235, 255, .42));
+    box-shadow:
+      inset 0 2px 2px #fff,
+      inset 0 -8px 14px rgba(110, 195, 255, .55),
+      inset 0 0 0 1px rgba(255, 255, 255, .5),
+      0 8px 16px rgba(0, 40, 90, .22);
+    transition: transform .5s cubic-bezier(.25, 1.25, .45, 1), opacity .3s ease, box-shadow .3s ease;
+  }
+  html[data-theme="dark"] .lens {
+    background: radial-gradient(circle at 32% 18%, rgba(160, 200, 255, .55), rgba(90, 140, 220, .3) 55%, rgba(40, 90, 170, .4));
+  }
+  .lens.dragging { transition: opacity .3s ease, box-shadow .3s ease; }
+  .dock.pressed .lens {
+    box-shadow:
+      inset 0 3px 3px #fff,
+      inset 0 -10px 18px rgba(110, 195, 255, .7),
+      inset 0 0 0 1px rgba(255, 255, 255, .7),
+      0 14px 26px rgba(0, 40, 90, .3);
+  }
+  .tab {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border-radius: 28px;
+    cursor: pointer;
+    min-width: 0;
+  }
+  .tab img {
+    height: clamp(40px, 6.6vh, 50px);
+    width: auto;
+    max-width: 92%;
+    object-fit: contain;
+    pointer-events: none;
+    filter: drop-shadow(0 3px 4px rgba(0, 30, 60, .25));
+    transition: transform .35s cubic-bezier(.3, 1.4, .5, 1);
+  }
+  .tab img.broken { display: none; }
+  .tab .fb {
+    display: none;
+    height: 50px;
+    line-height: 50px;
+    font-size: 36px;
+    filter: drop-shadow(0 3px 4px rgba(0, 30, 60, .25));
+    pointer-events: none;
+  }
+  .tab img.broken + .fb { display: block; }
+  .tab.active img { transform: scale(1.08) translateY(-1px); }
+  .tab .label {
+    font-size: clamp(10.5px, 3vw, 12.5px);
+    font-weight: 900;
+    line-height: 1.05;
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0, 40, 100, .5);
+    pointer-events: none;
+    padding: 0 2px;
+  }
+  .tab.active .label { text-shadow: 0 1px 2px rgba(0, 60, 130, .45); }
+  /* Красный «!» над иконкой доски, пока есть непросмотренные объявления */
+  .badge {
+    position: absolute;
+    top: 2px;
+    left: calc(50% + 14px);
+    z-index: 2;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #e53935;
+    border: 2px solid #fff;
+    color: #fff;
+    font: 900 13px/16px "Nunito", system-ui, sans-serif;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .3);
+    pointer-events: none;
+  }
+
+  .jump-arrow {
+    position: fixed;
+    top: calc(var(--app-h, 100dvh) - var(--dock-height) - var(--safe-bottom) - 64px);
+    right: 14px;
+    z-index: 25;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 2.5px solid #fff;
+    background: rgba(26, 111, 196, .92);
+    color: #fff;
+    font: 900 18px/1 "Nunito", system-ui, sans-serif;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0, 30, 70, .35);
+    animation: pop .25s ease both;
+  }
+
+  :focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+  /* ---------- Адаптация под разные экраны ---------- */
+  @media (max-height: 700px) {
+    #welcome .seal { margin-top: 24px; }
+    .timer { margin-top: 24px; }
+    .event-date { margin-top: 24px; }
+    .screen { padding-bottom: calc(var(--safe-bottom) + 130px); }
+  }
+  @media (max-width: 360px) {
+    .screen { padding-left: 16px; padding-right: 16px; }
+    .bubble { max-width: calc(100% - 52px); }
+    .reactions { padding-left: 0; }
+    .timer .lbl { font-size: 12px; }
+
+  }
+  @media (orientation: landscape) and (max-height: 500px) {
+    .screen { padding-top: calc(var(--safe-top) + 10px); padding-bottom: calc(var(--safe-bottom) + 120px); }
+    #welcome h1 { font-size: 28px; }
+    #welcome .seal { font-size: 56px; margin-top: 16px; }
+    .dock { height: 84px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body::before, body::after, .seal, #loader .seal-l, .spinner { animation: none !important; }
+    .screen, .lens, .switch::after { transition: none !important; }
+  }
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+</head>
+<body>
+
+<!-- Загрузка -->
+<div id="loader" aria-label="Загрузка">
+  <div class="ld-box">
+    <div class="ld-title">ЗАГРУЗКА...</div>
+    <div class="ld-pct" id="ldPct">0%</div>
+    <div class="ld-track">
+      <div class="ld-fill" id="ldFill"></div>
+      <span class="ld-seal" id="ldSeal" aria-hidden="true">🦭</span>
+    </div>
+  </div>
+</div>
+
+<!-- Приветствие -->
+<section class="screen active" id="welcome" data-screen="welcome" aria-label="Приветствие">
+  <img class="star" src="https://i.postimg.cc/wBhrR3FS/53A7E6DC-64AC-41C9-B50F-4D70069DBA06.png" alt="" style="--w:19vw;left:8%;top:15%;--d:0s">
+  <img class="star" src="https://i.postimg.cc/wBhrR3FS/53A7E6DC-64AC-41C9-B50F-4D70069DBA06.png" alt="" style="--w:8vw;right:16%;top:29%;--d:-2s">
+  <img class="star" src="https://i.postimg.cc/wBhrR3FS/53A7E6DC-64AC-41C9-B50F-4D70069DBA06.png" alt="" style="--w:9vw;left:8%;top:41%;--d:-1s">
+  <img class="star" src="https://i.postimg.cc/wBhrR3FS/53A7E6DC-64AC-41C9-B50F-4D70069DBA06.png" alt="" style="--w:23vw;right:5%;top:52%;--d:-3.5s">
+  <h1>
+    <span class="nowrap">ЭТО —</span>
+    <span class="nowrap">ЧАТ ТЮЛЕНЧИКА</span>
+  </h1>
+  <p class="sub">События и общение<br>в одном месте!</p>
+  <div class="seal" aria-hidden="true">🦭</div>
+</section>
+
+<!-- 1. Событие -->
+<section class="screen" data-screen="event" aria-label="Событие">
+  <img class="star" src="https://i.postimg.cc/wBhrR3FS/53A7E6DC-64AC-41C9-B50F-4D70069DBA06.png" alt="" style="--w:11vw;left:6%;top:8%;--d:0s">
+  <img class="star" src="https://i.postimg.cc/wBhrR3FS/53A7E6DC-64AC-41C9-B50F-4D70069DBA06.png" alt="" style="--w:11vw;right:4%;top:18%;--d:-1.5s">
+  <img class="star" src="https://i.postimg.cc/wBhrR3FS/53A7E6DC-64AC-41C9-B50F-4D70069DBA06.png" alt="" style="--w:17vw;left:6%;top:44%;--d:-3s">
+  <img class="star" src="https://i.postimg.cc/wBhrR3FS/53A7E6DC-64AC-41C9-B50F-4D70069DBA06.png" alt="" style="--w:20vw;right:4%;top:69%;--d:-2s">
+  <h2 class="event-title">ДО СЛЕДУЮЩЕГО<br>СОБЫТИЯ:</h2>
+  <div class="timer">
+    <div class="unit"><span class="num" id="d">00</span><span class="lbl">Дней</span></div>
+    <span class="sep">|</span>
+    <div class="unit"><span class="num" id="h">00</span><span class="lbl">Часов</span></div>
+    <span class="sep">|</span>
+    <div class="unit"><span class="num" id="m">00</span><span class="lbl">Минут</span></div>
+    <span class="sep">|</span>
+    <div class="unit"><span class="num" id="s">00</span><span class="lbl">Секунд</span></div>
+  </div>
+  <p class="event-date" id="eventDate"></p>
+</section>
+
+<!-- 2. Доска объявлений -->
+<section class="screen" data-screen="board" aria-label="Доска объявлений">
+  <div class="head-row">
+    <button class="round-btn" id="writeBtn" type="button" aria-label="Написать объявление">📝</button>
+    <button class="limit-pill hidden" id="limitBtn" type="button" disabled aria-label="Лимит: одно объявление в день">
+      <span>📝</span>
+      <span class="lim-count">1/1</span>
+      <span id="limitTime">00:00:00</span>
+    </button>
+  </div>
+  <div class="feed" id="feed"></div>
+  <button class="jump-arrow hidden" id="jumpBtn" type="button" aria-label="Есть непрочитанные объявления ниже">⬇</button>
+</section>
+
+<!-- 3. Мессенджер -->
+<section class="screen" data-screen="messenger" aria-label="Мессенджер">
+  <div id="messenger">
+    <div class="icons" aria-hidden="true">🕒💬🦭</div>
+    <h2>Мессенджер<br>скоро появится...</h2>
+    <p>Мы разрабатываем свой БЕЗОПАСНЫЙ мессенджер с необычными функциями, на это нужно некоторое время...</p>
+    <p class="note">Сейчас, группа доступна только в Телеграм и ВК</p>
+  </div>
+</section>
+
+<!-- 4. Профиль -->
+<section class="screen" data-screen="profile" aria-label="Профиль">
+
+  <!-- Вход и регистрация -->
+  <div id="authBlock" class="hidden">
+    <h2 class="block-title">Вход в Чат Тюленчика</h2>
+
+    <div class="tabs">
+      <button class="tab-auth on" id="tabReg" type="button">📝 Регистрация</button>
+      <button class="tab-auth" id="tabLogin" type="button">🚪 Вход</button>
+    </div>
+
+    <!-- Регистрация: 4 шага -->
+    <div class="card" id="regForm">
+      <div class="progress" id="stepInfo">Шаг 1 из 4</div>
+
+      <div data-step="1">
+        <div class="step-title">👤 Как вас зовут?</div>
+        <input type="text" id="regName" maxlength="30" placeholder="Имя">
+        <button class="btn" data-next="1" type="button">Дальше ➜</button>
+      </div>
+
+      <div data-step="2" class="hidden">
+        <div class="step-title">🏷️ Придумайте TulenID</div>
+        <input type="text" id="regApp" maxlength="20" placeholder="например, vika_mog">
+        <div class="hint-note">Латиница, цифры и _ (3–20 символов). Этот TulenID будет входить в Чат Тюленчика.</div>
+        <div class="row">
+          <button class="btn ghost" data-back="2" type="button">⬅ Назад</button>
+          <button class="btn" data-next="2" type="button">Дальше ➜</button>
+        </div>
+      </div>
+
+      <div data-step="3" class="hidden">
+        <div class="step-title">📷 Фото профиля</div>
+        <div class="photo-pick" id="regPhoto" role="button" tabindex="0">➕</div>
+        <input type="file" id="regFile" accept="image/*" class="file-hidden">
+        <div class="hint-note">Можно пропустить и поставить позже в профиле.</div>
+        <div class="row">
+          <button class="btn ghost" data-back="3" type="button">⬅ Назад</button>
+          <button class="btn" data-next="3" type="button">Дальше ➜</button>
+        </div>
+      </div>
+
+      <div data-step="4" class="hidden">
+        <div class="fl-row">
+          <img class="tg-ico" src="https://i.postimg.cc/26mY4rrc/IMG-1801.png" alt="">
+          <label class="fl-text" for="regTg">Telegram-username</label>
+          <button class="qbtn help-btn" data-tip="tgTip" type="button" aria-label="Подсказка" aria-expanded="false">?</button>
+        </div>
+        <div class="tip hidden" id="tgTip">Привязанный телеграм нужен для подтверждения входа<div class="tip-foot">Изменить нельзя</div></div>
+        <input type="text" id="regTg" maxlength="33" placeholder="@username">
+        <div class="tg-warn">
+          <span class="bang" aria-hidden="true">!</span>
+          <span>Перед отправкой перейдите к боту <a href="https://t.me/tulenchik_helper_bot" target="_blank" rel="noopener">@tulenchik_helper_bot</a> и нажмите /start, только после этого нажмите «Отправить»</span>
+        </div>
+        <div class="row">
+          <button class="btn ghost" data-back="4" type="button">⬅ Назад</button>
+          <button class="btn" id="regSend" type="button">Отправить</button>
+        </div>
+      </div>
+
+      <div id="regErr"></div>
+    </div>
+
+    <!-- Вход -->
+    <div class="card hidden" id="loginForm">
+      <label class="field-label" for="loginApp">🔑 Ваш TulenID</label>
+      <input type="text" id="loginApp" maxlength="20" placeholder="Введите ваш TulenID">
+      <button class="btn" id="loginBtn" type="button">✅ Подтвердить вход через Телеграм</button>
+      <button class="link-btn" id="forgotBtn" type="button">Забыли TulenID?</button>
+      <div class="hint-note">Бот пришлёт запрос в ваш Telegram. Вход будет только после вашего подтверждения.</div>
+      <div class="tg-warn">
+        <span class="bang" aria-hidden="true">!</span>
+        <span>Перед входом перейдите к боту <a href="https://t.me/tulenchik_helper_bot" target="_blank" rel="noopener">@tulenchik_helper_bot</a> и нажмите /start, если раньше этого не делали</span>
+      </div>
+      <div id="loginErr"></div>
+    </div>
+
+    <!-- Забыли TulenID -->
+    <div class="card hidden" id="forgotForm">
+      <div class="step-title">🔎 Восстановление TulenID</div>
+      <label class="field-label" for="forgotTg">✈️ Telegram-username, привязанный к профилю</label>
+      <input type="text" id="forgotTg" maxlength="33" placeholder="@username">
+      <div class="hint-note">Бот пришлёт ваш TulenID и спросит, хотите ли его сменить.</div>
+      <button class="btn" id="forgotSend" type="button">Отправить в Telegram</button>
+      <button class="link-btn" id="forgotBack" type="button">⬅ Назад ко входу</button>
+      <div id="forgotErr"></div>
+    </div>
+
+    <!-- Новый TulenID после подтверждения в боте -->
+    <div class="card hidden" id="newIdForm">
+      <div class="step-title">🎫 Новый TulenID</div>
+      <label class="field-label" for="newId">Введите новый TulenID</label>
+      <input type="text" id="newId" maxlength="20" placeholder="Например, vika_new">
+      <div class="hint-note">Латиница, цифры и _ (3–20 символов). Менять можно раз в 7 дней.</div>
+      <div class="row">
+        <button class="btn ghost" id="newIdCancel" type="button">Отмена</button>
+        <button class="btn" id="newIdSave" type="button">Сохранить</button>
+      </div>
+      <div id="newIdErr"></div>
+    </div>
+  </div>
+
+  <!-- Профиль (после входа) -->
+  <div id="profileBlock" class="profile hidden">
+    <div class="head-row">
+      <button class="round-btn" id="editBtn" type="button" aria-label="Редактировать профиль">✏️</button>
+    </div>
+    <div class="photo empty" id="photo" role="button" tabindex="0" aria-label="Поменять фото"></div>
+    <input type="file" id="fileInput" accept="image/*" class="file-hidden">
+    <div class="p-name" id="pName"></div>
+    <div class="app-line">
+      <img class="app-ico" src="https://i.postimg.cc/50xwDQfv/IMG-5430.png" alt="">
+      <b id="pApp"></b>
+    </div>
+    <div class="app-cap">TulenID</div>
+    <div class="p-row">
+      <img class="tg-ico" src="https://i.postimg.cc/26mY4rrc/IMG-1801.png" alt="">
+      <span>Telegram: <b id="pTg"></b></span>
+      <button class="qbtn help-btn" data-tip="profileTip" type="button" aria-label="Подсказка" aria-expanded="false">?</button>
+    </div>
+    <div class="tip hidden" id="profileTip">Привязанный телеграм нужен для подтверждения входа<div class="tip-foot">Изменить нельзя</div></div>
+
+    <h3 class="block-title" style="margin-top:36px">- НАСТРОЙКИ ПРИЛОЖЕНИЯ -</h3>
+    <div class="settings">
+      <div class="setting"><button class="switch" id="themeSwitch" role="switch" aria-checked="false" aria-label="Темная тема"></button><span>Темная тема</span></div>
+      <div class="setting"><button class="switch" id="notifSwitch" role="switch" aria-checked="false" aria-label="Уведомления"></button><span>Уведомления</span></div>
+      <div class="setting"><button class="switch on" id="vibeSwitch" role="switch" aria-checked="true" aria-label="Вибрация"></button><span>Вибрация</span></div>
+    </div>
+
+    <div style="width:100%;margin-top:30px"><button class="btn ghost" id="logoutBtn" type="button">Выйти</button></div>
+  </div>
+</section>
+
+<!-- Новое объявление / изменение -->
+<div class="modal" id="modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <h3 id="sheetTitle">Новое объявление</h3>
+    <div class="editor" id="editor" contenteditable="true" data-placeholder="Напишите объявление..."></div>
+    <input type="file" id="postFile" accept="image/*" class="file-hidden">
+    <div id="postImgWrap"></div>
+    <div class="tools">
+      <button class="tool-btn" id="photoBtn" type="button">📎 Прикрепить Фото</button>
+      <button class="tool-btn" id="custBtn" type="button">🎨 Кастомизация</button>
+    </div>
+    <div class="opts-line" id="optsLine"></div>
+    <div id="postErr"></div>
+    <div class="actions-row">
+      <button class="btn ghost" id="cancelBtn" type="button">Отмена</button>
+      <button class="btn" id="saveBtn" type="button">Опубликовать</button>
+    </div>
+  </div>
+</div>
+
+<!-- Кастомизация объявления -->
+<div class="modal top" id="custModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="custTitle">
+    <h3 id="custTitle">Кастомизация</h3>
+
+    <div class="cust-title">Цвет сообщения</div>
+    <div class="swatches" id="swBubble"></div>
+
+    <div class="cust-title">Цвет текста</div>
+    <div class="swatches" id="swText"></div>
+
+    <div class="toggle-row">
+      <span>Отправить бесшумно</span>
+      <button class="switch" id="silentSwitch" role="switch" aria-checked="false" aria-label="Отправить бесшумно"></button>
+    </div>
+    <div class="hint-note">Пока заглушка: функция появится позже</div>
+
+    <div class="toggle-row">
+      <span>Отключить реакции</span>
+      <button class="switch" id="noReactSwitch" role="switch" aria-checked="false" aria-label="Отключить реакции"></button>
+    </div>
+
+    <button class="btn" id="custDone" type="button">Готово</button>
+  </div>
+</div>
+
+<!-- Панель оформления: появляется над выделенным текстом -->
+<div class="sel-bar" id="selBar" role="toolbar" aria-label="Оформление текста">
+  <button class="fmt" type="button" data-cmd="bold" aria-label="Жирный" style="font-weight:900">B</button>
+  <button class="fmt i" type="button" data-cmd="italic" aria-label="Курсив">I</button>
+  <button class="fmt u" type="button" data-cmd="underline" aria-label="Подчёркнутый">U</button>
+  <button class="fmt s" type="button" data-cmd="strikeThrough" aria-label="Зачёркнутый">S</button>
+  <button class="fmt" type="button" data-wrap="tg-spoiler" aria-label="Скрытый текст">🫥</button>
+  <button class="fmt" type="button" data-wrap="blockquote" aria-label="Цитата">❝</button>
+</div>
+
+<!-- Ожидание ответа Telegram -->
+<div class="modal top" id="waitOverlay" hidden>
+  <div class="sheet wait-sheet" role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true">⏳</div>
+    <div class="wait-text" id="waitText"></div>
+    <div class="phrase hidden" id="waitPhrase"></div>
+    <button class="btn ghost" id="waitCancel" type="button">Отмена</button>
+  </div>
+</div>
+
+<!-- Редактирование профиля -->
+<div class="modal" id="editModal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <h3 id="editTitle">Редактирование</h3>
+
+    <label class="field-label" for="editName">👤 Имя</label>
+    <input type="text" id="editName" maxlength="30" placeholder="Имя">
+
+    <label class="field-label" for="editApp">
+      <img class="app-ico" src="https://i.postimg.cc/50xwDQfv/IMG-5430.png" alt="" style="width:22px;height:22px;vertical-align:middle">
+      TulenID
+    </label>
+    <input type="text" id="editApp" maxlength="20" placeholder="TulenID">
+    <div class="hint-note">Менять можно раз в 7 дней. Смена подтверждается в Telegram.</div>
+
+    <div class="hint-note" style="margin-top:14px;text-align:center">📷 Фото: нажмите на фото в профиле</div>
+
+    <div id="editErr"></div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn ghost" id="editCancel" type="button">Отмена</button>
+      <button class="btn" id="editSave" type="button">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<label id="hapLabel" for="hapInput" class="file-hidden"></label>
+<input type="checkbox" id="hapInput" switch class="file-hidden" tabindex="-1" aria-hidden="true">
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Шкала: зажмите и двигайте влево-вправо -->
+<nav class="dock" id="dock" role="tablist" aria-label="Разделы" tabindex="0">
+  <div class="lens" id="lens"></div>
+
+  <div class="tab" role="tab" data-index="0" data-normal="https://i.postimg.cc/wBhrR3FS/53A7E6DC-64AC-41C9-B50F-4D70069DBA06.png" data-selected="https://i.postimg.cc/PJDtKBW6/BD1FCBB2-FEF1-4384-B48A-BDAE88009142.png" aria-label="Событие">
+    <img src="https://i.postimg.cc/wBhrR3FS/53A7E6DC-64AC-41C9-B50F-4D70069DBA06.png" alt="">
+    <span class="fb">✦</span>
+    <span class="label">Событие</span>
+  </div>
+
+  <div class="tab" role="tab" data-index="1" data-normal="https://i.postimg.cc/DzqN4m59/B1DA9417-06A4-4F00-8C2C-AE40C1D36AAD.png" data-selected="https://i.postimg.cc/cH2xRsn9/10C7481F-EEC4-45DD-BF13-BB59763385EE.png" aria-label="Доска объявлений">
+    <img src="https://i.postimg.cc/DzqN4m59/B1DA9417-06A4-4F00-8C2C-AE40C1D36AAD.png" alt="">
+    <span class="fb">📋</span>
+    <span class="label">Доска Объявлений</span>
+    <span class="badge hidden" id="boardBadge" aria-label="Есть непросмотренные объявления">!</span>
+  </div>
+
+  <div class="tab" role="tab" data-index="2" data-normal="https://i.postimg.cc/JhbFHtKF/AC715512-A513-4A47-AA9C-24CB2DD30D13.png" data-selected="https://i.postimg.cc/cHr1tKr8/CC7B63A2-BDE7-4D6F-A146-45FFDE39FE32.png" aria-label="Мессенджер">
+    <img src="https://i.postimg.cc/JhbFHtKF/AC715512-A513-4A47-AA9C-24CB2DD30D13.png" alt="">
+    <span class="fb">💬</span>
+    <span class="label">Мессенджер</span>
+  </div>
+
+  <div class="tab" role="tab" data-index="3" data-normal="https://i.postimg.cc/cJQzt6T2/5BA65541-C3A8-4547-9C91-FB472590B4E4.png" data-selected="https://i.postimg.cc/DZHvr2XD/16D84106-4F2F-4896-80B8-6F4D3CA1E47F.png" aria-label="Профиль">
+    <img src="https://i.postimg.cc/cJQzt6T2/5BA65541-C3A8-4547-9C91-FB472590B4E4.png" alt="">
+    <span class="fb">🦭</span>
+    <span class="label">Профиль</span>
+  </div>
+</nav>
+
+<script>
+(function () {
+  /* =========================================================
+     Адрес сервера (Cloudflare Worker)
+     ========================================================= */
+  const WORKER = 'https://tyulen-bot.markbartolomeev.workers.dev';
+  const TOKEN_KEY = 'tyulenchik.token.v2';
+  // Из Firebase Console (Настройки проекта → Ваши приложения → веб-приложение)
+  const FIREBASE_CONFIG = {
+    apiKey: 'AIzaSyBfi_aHzkMG3vUUjaM_djwD0w62NNv3uI8',
+    authDomain: 'tyulenchik-chat.firebaseapp.com',
+    projectId: 'tyulenchik-chat',
+    messagingSenderId: '303031812763',
+    appId: '1:303031812763:web:9d4decf3f00a94d4563c3e'
+  };
+  // Cloud Messaging → Web Push certificates → ключ (VAPID)
+  const VAPID_KEY = 'BPQ7vlc4Qy7i81z61bwYtLg5OtH6UAvk01AXg24pn8rKqKykvrIKXmIJm2DzVdu1IGOHh3P-BW8bEZSJswq3isc';
+  const THEME_KEY = 'tyulenchik.theme';
+  const TG_ICON = 'https://i.postimg.cc/26mY4rrc/IMG-1801.png';
+  const SEAL_ICON = 'https://i.postimg.cc/50xwDQfv/IMG-5430.png';
+  const APP_RE = /^[A-Za-z0-9_]{3,20}$/;
+  const TG_RE = /^[A-Za-z][A-Za-z0-9_]{4,31}$/;
+  const POLL_MS = 2000;
+  const WAIT_MS = 190000;
+  const PHRASE_AFTER_MS = 30000;
+  const PHRASE_EVERY_MS = 10000;
+  const PHRASES = [
+    'Это может занять некоторое время…',
+    'Сервера долго отвечают…',
+    'Пожалуйста, подождите, мы спасаем тюленчика 🦭',
+    'Тюлень уже плывёт за вашим подтверждением 🌊',
+    'Почти готово, держитесь…',
+    'Проверяем, не уснул ли бот 🤖',
+    'Ещё чуть-чуть, тюлени тоже ждут рыбку 🐟',
+    'Сервер думает, как и мы…',
+  ];
+  const REACTIONS = ['👍', '👎', '❤️', '🤬', '💩'];
+  // 9 стандартных цветов
+  const PALETTE = [
+    ['#e53935', 'красный'], ['#fb8c00', 'оранжевый'], ['#fdd835', 'желтый'],
+    ['#43a047', 'зеленый'], ['#4fc3f7', 'голубой'], ['#1e88e5', 'синий'],
+    ['#8e24aa', 'фиолетовый'], ['#111111', 'черный'], ['#ffffff', 'белый'],
+  ];
+  const MAX_IMG_SIDE = 900;
+  const MAX_IMG_BYTES = 700000;
+  const $ = id => document.getElementById(id);
+
+  const html = document.documentElement;
+  const dock = $('dock');
+  const lens = $('lens');
+  const welcome = $('welcome');
+  const loader = $('loader');
+  const tabEls = Array.from(dock.querySelectorAll('.tab'));
+  const TABS = ['event', 'board', 'messenger', 'profile'];
+  const PAD = 8;
+
+  let current = -1;
+  let welcomeGone = false;
+  let dragging = false;
+  let ready = false;
+  let me = null;
+  let posts = [];
+  let limit = null;
+  let limitTimer = null;
+  let unseen = 0;
+  let currentView = 'reg';
+  let postImage = '';
+  let editingId = null;
+  let grant = '';
+  let draftOpts = { bubble: '', color: '', silent: false, noReactions: false };
+
+  const pad2 = n => String(n).padStart(2, '0');
+
+  /* ---------- Тема ---------- */
+  const themeMeta = $('themeMeta');
+  function applyTheme(dark) {
+    html.setAttribute('data-theme', dark ? 'dark' : 'light');
+    themeMeta.setAttribute('content', dark ? '#0b1f3f' : '#4f9bd9');
+    const sw = $('themeSwitch');
+    sw.classList.toggle('on', dark);
+    sw.setAttribute('aria-checked', String(dark));
+  }
+  function isDark() { return html.getAttribute('data-theme') === 'dark'; }
+  $('themeSwitch').addEventListener('click', () => {
+    const dark = !isDark();
+    applyTheme(dark);
+    try { localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light'); } catch (_) {}
+  });
+  try { applyTheme(localStorage.getItem(THEME_KEY) === 'dark'); } catch (_) {}
+
+  /* ---------- Вибрация (отдача) ---------- */
+  const VIBE_KEY = 'tyulenchik.vibe';
+  let vibeOn = true;
+  try { vibeOn = localStorage.getItem(VIBE_KEY) !== 'off'; } catch (_) {}
+  function buzz(ms = 12) {
+    if (!vibeOn) return;
+    if (navigator.vibrate) { navigator.vibrate(ms); return; }
+    // iPhone (iOS 18+): переключение скрытого переключателя даёт короткую отдачу
+    const hap = $('hapLabel');
+    if (hap) hap.click();
+  }
+  const vibeSwitch = $('vibeSwitch');
+  vibeSwitch.classList.toggle('on', vibeOn);
+  vibeSwitch.setAttribute('aria-checked', String(vibeOn));
+  vibeSwitch.addEventListener('click', () => {
+    vibeOn = !vibeOn;
+    try { localStorage.setItem(VIBE_KEY, vibeOn ? 'on' : 'off'); } catch (_) {}
+    vibeSwitch.classList.toggle('on', vibeOn);
+    vibeSwitch.setAttribute('aria-checked', String(vibeOn));
+  });
+  // Любое переключение (кроме выключения вибрации) даёт отдачу
+  document.addEventListener('click', e => {
+    if (e.target.closest && e.target.closest('.switch')) buzz();
+  });
+
+  /* ---------- Сеть ---------- */
+  async function api(method, path, body, token) {
+    const headers = {};
+    if (body) headers['Content-Type'] = 'application/json';
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    const res = await fetch(WORKER + path, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    let data = {};
+    try { data = await res.json(); } catch (_) {}
+    return { ok: res.ok, status: res.status, data };
+  }
+
+  function getToken() { try { return localStorage.getItem(TOKEN_KEY); } catch (_) { return null; } }
+  function setToken(t) { try { localStorage.setItem(TOKEN_KEY, t); } catch (_) {} }
+  function clearToken() { try { localStorage.removeItem(TOKEN_KEY); } catch (_) {} }
+
+  function err(id, msg) { $(id).innerHTML = msg ? `<div class="err">${msg}</div>` : ''; }
+
+  let toastTimer = null;
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  async function fetchMe() {
+    const token = getToken();
+    if (!token) { me = null; return; }
+    try {
+      const r = await api('GET', '/me', null, token);
+      if (r.ok) me = r.data.user;
+      else { if (r.status === 401) clearToken(); me = null; }
+    } catch (_) { me = null; }
+  }
+
+  /* ---------- Ожидание ответа Telegram (с надписями через 30 секунд) ---------- */
+  let cancelWait = null;
+  let phraseDelay = null;
+  let phraseTick = null;
+  let lastPhrase = -1;
+
+  function nextPhrase() {
+    let i;
+    do { i = Math.floor(Math.random() * PHRASES.length); } while (i === lastPhrase && PHRASES.length > 1);
+    lastPhrase = i;
+    const el = $('waitPhrase');
+    el.classList.remove('hidden');
+    el.style.animation = 'none';
+    el.offsetHeight; // перезапуск анимации
+    el.style.animation = '';
+    el.textContent = PHRASES[i];
+  }
+
+  function showWait(text) {
+    $('waitText').textContent = text;
+    if (!$('waitOverlay').hidden) return; // уже ждём: только меняем текст
+    $('waitPhrase').classList.add('hidden');
+    $('waitOverlay').hidden = false;
+    clearTimeout(phraseDelay);
+    clearInterval(phraseTick);
+    phraseDelay = setTimeout(() => {
+      nextPhrase();
+      phraseTick = setInterval(nextPhrase, PHRASE_EVERY_MS);
+    }, PHRASE_AFTER_MS);
+  }
+
+  function hideWait() {
+    $('waitOverlay').hidden = true;
+    clearTimeout(phraseDelay);
+    clearInterval(phraseTick);
+    cancelWait = null;
+  }
+
+  $('waitCancel').addEventListener('click', () => { if (cancelWait) cancelWait('cancelled'); });
+
+  function waitForConfirm(id) {
+    return new Promise(resolve => {
+      const started = Date.now();
+      const timer = setInterval(async () => {
+        if (Date.now() - started > WAIT_MS) return finish({ status: 'expired' });
+        try {
+          const r = await api('GET', '/status?id=' + encodeURIComponent(id));
+          if (r.ok && r.data.status !== 'pending') finish(r.data);
+        } catch (_) {}
+      }, POLL_MS);
+      function finish(result) {
+        clearInterval(timer);
+        cancelWait = null;
+        resolve(result);
+      }
+      cancelWait = status => finish({ status });
+    });
+  }
+
+  /* ---------- Загрузка: всё загрузить, потом показать ---------- */
+  const textureUrls = [];
+  tabEls.forEach(t => textureUrls.push(t.dataset.normal, t.dataset.selected));
+  textureUrls.push(TG_ICON, SEAL_ICON);
+
+  function loadImage(src) {
+    return new Promise(res => {
+      const im = new Image();
+      im.onload = im.onerror = () => res();
+      im.src = src;
+    });
+  }
+
+  const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+  const minDelay = new Promise(res => setTimeout(res, 700));
+  const hardTimeout = new Promise(res => setTimeout(res, 9000));
+  const ldFill = $('ldFill');
+  const ldPct = $('ldPct');
+  const ldSeal = $('ldSeal');
+  let ldDone = 0;
+  const ldTotal = textureUrls.length + 3;
+
+  function setProgress(p) {
+    const v = Math.max(0, Math.min(100, Math.round(p)));
+    ldFill.style.width = v + '%';
+    ldSeal.style.left = v + '%';
+    ldPct.textContent = v + '%';
+  }
+  function track(p) {
+    return Promise.resolve(p).then(
+      r => { ldDone++; setProgress(ldDone / ldTotal * 100); return r; },
+      () => { ldDone++; setProgress(ldDone / ldTotal * 100); }
+    );
+  }
+
+  const loadTasks = textureUrls.map(loadImage)
+    .concat([fontsReady, fetchMe(), loadBoard()])
+    .map(track);
+  const everything = Promise.all([Promise.all(loadTasks), minDelay]);
+
+  Promise.race([everything, hardTimeout]).then(() => {
+    ready = true;
+    html.classList.remove('is-loading');
+    setProgress(100);
+    loader.classList.add('hide');
+    setTimeout(() => { loader.style.display = 'none'; }, 700);
+    refreshProfileUI();
+  });
+
+  /* ---------- Шкала ---------- */
+  tabEls.forEach(t => {
+    const img = t.querySelector('img');
+    img.addEventListener('error', () => img.classList.add('broken'));
+  });
+
+  function lensWidth() { return lens.offsetWidth; }
+  function placeLens(px) { lens.style.transform = `translateX(${px}px)`; }
+  function snapLens() {
+    if (current < 0) { lens.style.opacity = 0; return; }
+    lens.style.opacity = 1;
+    placeLens(current * lensWidth());
+  }
+
+  function setSection(i) {
+    if (i === current) return;
+    current = i;
+    buzz();
+    if (!welcomeGone) {
+      welcomeGone = true;
+      welcome.remove();
+    }
+    document.querySelectorAll('.screen[data-screen]').forEach(s => {
+      s.classList.toggle('active', s.dataset.screen === TABS[i]);
+    });
+    tabEls.forEach((t, idx) => {
+      const on = idx === i;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', String(on));
+      const img = t.querySelector('img');
+      const src = on ? t.dataset.selected : t.dataset.normal;
+      if (img.getAttribute('src') !== src) img.setAttribute('src', src);
+    });
+    if (TABS[i] === 'board') openBoard();
+    if (!dragging) snapLens();
+    else lens.style.opacity = 1;
+  }
+
+  function followFinger(clientX) {
+    const x = clientX - dock.getBoundingClientRect().left;
+    const w = lensWidth();
+    const p = Math.min(3 * w, Math.max(0, x - PAD - w / 2));
+    placeLens(p);
+    setSection(Math.min(3, Math.max(0, Math.round(p / w))));
+  }
+
+  dock.addEventListener('pointerdown', e => {
+    if (!ready) return;
+    dragging = true;
+    dock.setPointerCapture(e.pointerId);
+    dock.classList.add('pressed');
+    lens.classList.add('dragging');
+    followFinger(e.clientX);
+  });
+  dock.addEventListener('pointermove', e => { if (dragging) followFinger(e.clientX); });
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    dock.classList.remove('pressed');
+    lens.classList.remove('dragging');
+    snapLens();
+  }
+  dock.addEventListener('pointerup', endDrag);
+  dock.addEventListener('pointercancel', endDrag);
+  dock.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') setSection(Math.min(3, current + 1));
+    if (e.key === 'ArrowLeft') setSection(Math.max(0, current < 0 ? 0 : current - 1));
+  });
+  window.addEventListener('resize', () => { if (!dragging) snapLens(); });
+
+  /* ---------- Отсчёт до 1 декабря ---------- */
+  const dEl = $('d'), hEl = $('h'), mEl = $('m'), sEl = $('s');
+  const dateEl = $('eventDate');
+
+  function nextDecemberFirst(now) {
+    let t = new Date(now.getFullYear(), 11, 1, 0, 0, 0);
+    if (t <= now) t = new Date(now.getFullYear() + 1, 11, 1, 0, 0, 0);
+    return t;
+  }
+  let target = nextDecemberFirst(new Date());
+  dateEl.textContent = `1 декабря ${target.getFullYear()}`;
+
+  function tick() {
+    const now = new Date();
+    if (now >= target) target = nextDecemberFirst(now);
+    let diff = Math.max(0, target - now);
+    const days = Math.floor(diff / 86400000); diff -= days * 86400000;
+    const hours = Math.floor(diff / 3600000); diff -= hours * 3600000;
+    const mins = Math.floor(diff / 60000); diff -= mins * 60000;
+    const secs = Math.floor(diff / 1000);
+    dEl.textContent = pad2(days);
+    hEl.textContent = pad2(hours);
+    mEl.textContent = pad2(mins);
+    sEl.textContent = pad2(secs);
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  /* ---------- Безопасное форматирование текста ---------- */
+  function sanitize(src) {
+    const map = {
+      strong: 'b', b: 'b', em: 'i', i: 'i', u: 'u', strike: 's', s: 's', del: 's',
+      br: 'br', div: 'div', p: 'div', blockquote: 'blockquote', 'tg-spoiler': 'tg-spoiler',
+    };
+    let s = String(src || '').replace(/<\/?([a-zA-Z][a-zA-Z0-9-]*)\b[^>]*>/g, (m, tag) => {
+      const t = map[tag.toLowerCase()];
+      if (!t) return '';
+      const closing = m.startsWith('</');
+      if (t === 'br') return '<br>';
+      if (t === 'div') return closing ? '<br>' : '';
+      return closing ? `</${t}>` : `<${t}>`;
+    });
+    s = s.replace(/<(?!\/?(b|i|u|s|br|blockquote|tg-spoiler)>)/g, '&lt;');
+    return s.replace(/(<br>\s*)+$/, '');
+  }
+
+  function plainLength(htmlStr) {
+    const d = document.createElement('div');
+    d.innerHTML = htmlStr;
+    return d.textContent.trim().length;
+  }
+
+  function isDarkHex(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    return (0.299 * r + 0.587 * g + 0.114 * b) < 140;
+  }
+
+  /* ---------- Доска ---------- */
+  const feed = $('feed');
+
+  function fmtDate(ts) {
+    const d = new Date(ts);
+    return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.${String(d.getFullYear()).slice(-2)}, ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+
+  function updateBadge() {
+    const show = unseen > 0 && current !== 1 && !!getToken();
+    $('boardBadge').classList.toggle('hidden', !show);
+  }
+
+  async function loadBoard() {
+    try {
+      const r = await api('GET', '/board', null, getToken());
+      if (r.ok) {
+        posts = r.data.posts || [];
+        limit = r.data.limit || null;
+        unseen = r.data.unseen || 0;
+        renderFeed();
+        renderLimit();
+        updateBadge();
+      }
+    } catch (_) {}
+  }
+
+  // Доска открыта: отмечаем объявления просмотренными
+  async function markSeen() {
+    if (!getToken() || !me) return;
+    try {
+      const r = await api('POST', '/board/seen', null, getToken());
+      if (r.ok) {
+        posts = r.data.posts;
+        unseen = r.data.unseen || 0;
+        renderFeed();
+        updateBadge();
+      }
+    } catch (_) {}
+  }
+
+  /* Доска открывается сверху; стрелка показывает непрочитанные ниже */
+  let jumpSnapshot = [];
+  const boardScreen = document.querySelector('.screen[data-screen="board"]');
+
+  function updateJump() {
+    const limitY = window.innerHeight - 150;
+    const show = current === 1 && jumpSnapshot.length > 0 && jumpSnapshot.some(id => {
+      const el = feed.querySelector(`[data-id="${id}"]`);
+      return el && el.getBoundingClientRect().top > limitY;
+    });
+    $('jumpBtn').classList.toggle('hidden', !show);
+  }
+
+  async function openBoard() {
+    await loadBoard();
+    jumpSnapshot = posts.filter(p => p.seen === false).map(p => p.id);
+    boardScreen.scrollTop = 0;
+    await markSeen();
+    updateJump();
+  }
+
+  $('jumpBtn').addEventListener('click', () => {
+    const limitY = window.innerHeight - 150;
+    const target = jumpSnapshot
+      .map(id => feed.querySelector(`[data-id="${id}"]`))
+      .find(el => el && el.getBoundingClientRect().top > limitY);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  boardScreen.addEventListener('scroll', updateJump, { passive: true });
+
+  function applyOpts(bub, tx, opts) {
+    if (!opts) return;
+    if (opts.bubble) {
+      bub.style.background = opts.bubble;
+      bub.style.borderColor = 'rgba(0,0,0,.25)';
+    }
+    const textColor = opts.color || (opts.bubble ? (isDarkHex(opts.bubble) ? '#ffffff' : '#0b1f3f') : '');
+    if (textColor) bub.style.color = textColor;
+  }
+
+  function renderFeed() {
+    feed.textContent = '';
+    if (!posts.length) {
+      const empty = document.createElement('p');
+      empty.className = 'feed-empty';
+      empty.textContent = 'Пока нет объявлений';
+      feed.append(empty);
+      return;
+    }
+    [...posts].reverse().forEach(p => {
+      const art = document.createElement('article');
+      art.className = 'post';
+      art.dataset.id = p.id;
+
+      const row = document.createElement('div');
+      row.className = 'post-row';
+
+      const av = document.createElement('div');
+      av.className = 'avatar' + (p.avatar ? '' : ' empty');
+      if (p.avatar) av.style.backgroundImage = `url("${p.avatar}")`;
+
+      const bub = document.createElement('div');
+      bub.className = 'bubble';
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const au = document.createElement('span');
+      au.className = 'author';
+      au.textContent = p.author;
+      const dt = document.createElement('span');
+      dt.className = 'date';
+      dt.textContent = fmtDate(p.date);
+      meta.append(au, dt);
+
+      const tx = document.createElement('div');
+      tx.className = 'text';
+      tx.innerHTML = sanitize(p.text);
+
+      bub.append(meta, tx);
+      if (p.image && p.image.startsWith('data:image/')) {
+        const img = document.createElement('img');
+        img.className = 'post-img';
+        img.alt = '';
+        img.src = p.image;
+        bub.append(img);
+      }
+      const views = document.createElement('div');
+      views.className = 'views';
+      views.textContent = `👁 ${p.views || 0}`;
+      bub.append(views);
+
+      applyOpts(bub, tx, p.opts);
+      row.append(av, bub);
+
+      const noReact = !!(p.opts && p.opts.noReactions);
+      const rx = document.createElement('div');
+      rx.className = 'reactions';
+      if (!noReact) {
+        REACTIONS.forEach(emo => {
+          if (!(p.reactions && p.reactions[emo])) return;
+          const mine = !!(p.mine && p.mine.includes(emo));
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'rx' + (mine ? ' on' : '');
+          chip.setAttribute('aria-label', mine ? `Убрать реакцию ${emo}` : `Реакция ${emo}`);
+          const e = document.createElement('span');
+          e.className = 'emo';
+          e.textContent = emo;
+          const c = document.createElement('span');
+          c.textContent = p.reactions[emo];
+          chip.append(e, c);
+          chip.addEventListener('click', () => { if (mine) react(p.id, emo); });
+          rx.append(chip);
+        });
+      }
+
+      if (p.own) {
+        const wrap = document.createElement('div');
+        wrap.className = 'act-wrap';
+        const edit = document.createElement('button');
+        edit.type = 'button';
+        edit.className = 'act';
+        edit.textContent = '✏️ Изменить';
+        edit.addEventListener('click', () => openEditor(p));
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'act del';
+        del.textContent = '🗑️ Удалить';
+        del.addEventListener('click', () => removePost(p));
+        wrap.append(edit, del);
+        rx.append(wrap);
+      }
+
+      if (!noReact) bindPress(bub, p);
+      art.append(row, rx);
+      feed.append(art);
+    });
+    updateJump();
+  }
+
+  // Открыть скрытый текст нажатием
+  feed.addEventListener('click', e => {
+    const sp = e.target.closest && e.target.closest('tg-spoiler');
+    if (sp && feed.contains(sp)) sp.classList.toggle('open');
+  });
+
+  /* ---------- Лимит: одно объявление в день ---------- */
+  function renderLimit() {
+    const writeBtn = $('writeBtn');
+    const pill = $('limitBtn');
+    const blocked = !!(me && limit && limit.used >= limit.max);
+    writeBtn.classList.toggle('hidden', blocked);
+    pill.classList.toggle('hidden', !blocked);
+    clearInterval(limitTimer);
+    if (!blocked) return;
+
+    const update = () => {
+      const left = Math.max(0, limit.resetAt - Date.now());
+      const s = Math.floor(left / 1000);
+      $('limitTime').textContent = `${pad2(Math.floor(s / 3600))}:${pad2(Math.floor((s % 3600) / 60))}:${pad2(s % 60)}`;
+      if (left <= 0) {
+        clearInterval(limitTimer);
+        limit = null;
+        loadBoard();
+      }
+    };
+    update();
+    limitTimer = setInterval(update, 1000);
+  }
+
+  $('writeBtn').addEventListener('click', () => {
+    if (!getToken() || !me) return toast('Войдите в профиль, чтобы писать объявления');
+    openEditor(null);
+  });
+
+  /* ---------- Реакции ---------- */
+  async function react(id, emoji) {
+    const token = getToken();
+    if (!token || !me) return toast('Войдите в профиль, чтобы ставить реакции');
+    try {
+      const r = await api('POST', '/board/react', { id, emoji }, token);
+      if (r.ok) { posts = r.data.posts; limit = r.data.limit || limit; renderFeed(); return; }
+      if (r.status === 401) return toast('Войдите в профиль, чтобы ставить реакции');
+      toast(r.data.error || 'Не получилось поставить реакцию');
+    } catch (_) {
+      toast('Нет связи с сервером');
+    }
+  }
+
+  async function chooseReaction(postId, emoji) {
+    const p = posts.find(x => x.id === postId);
+    const mine = (p && p.mine) || [];
+    if (mine.includes(emoji)) return react(postId, emoji);
+    for (const old of mine) await react(postId, old);
+    await react(postId, emoji);
+  }
+
+  const picker = document.createElement('div');
+  picker.className = 'picker hidden';
+  REACTIONS.forEach(emo => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = emo;
+    b.dataset.emo = emo;
+    b.setAttribute('aria-label', 'Реакция ' + emo);
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = picker.dataset.postId;
+      hidePicker();
+      if (id) chooseReaction(id, emo);
+    });
+    picker.append(b);
+  });
+  document.body.append(picker);
+
+  function hidePicker() { picker.classList.add('hidden'); }
+
+  function showPicker(bubbleEl, post) {
+    picker.dataset.postId = post.id;
+    const mine = post.mine || [];
+    picker.querySelectorAll('button').forEach(b => {
+      b.classList.toggle('sel', mine.includes(b.dataset.emo));
+    });
+    picker.classList.remove('hidden');
+    const r = bubbleEl.getBoundingClientRect();
+    const pw = picker.offsetWidth;
+    const ph = picker.offsetHeight;
+    let left = r.left + r.width / 2 - pw / 2;
+    left = Math.max(10, Math.min(window.innerWidth - pw - 10, left));
+    let top = r.top - ph - 10;
+    if (top < 10) top = r.bottom + 10;
+    picker.style.left = left + 'px';
+    picker.style.top = top + 'px';
+    if (navigator.vibrate) navigator.vibrate(12);
+  }
+
+  function bindPress(el, post) {
+    let timer = null;
+    let sx = 0, sy = 0;
+    const cancel = () => { clearTimeout(timer); timer = null; };
+    el.addEventListener('pointerdown', e => {
+      sx = e.clientX;
+      sy = e.clientY;
+      cancel();
+      timer = setTimeout(() => {
+        timer = null;
+        if (!getToken() || !me) return toast('Войдите в профиль, чтобы ставить реакции');
+        showPicker(el, post);
+      }, 450);
+    });
+    el.addEventListener('pointermove', e => {
+      if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) cancel();
+    });
+    el.addEventListener('pointerup', cancel);
+    el.addEventListener('pointercancel', cancel);
+    el.addEventListener('pointerleave', cancel);
+    el.addEventListener('contextmenu', e => e.preventDefault());
+  }
+
+  document.addEventListener('pointerdown', e => {
+    if (!picker.classList.contains('hidden') && !picker.contains(e.target)) hidePicker();
+  });
+
+  async function removePost(p) {
+    if (!window.confirm('Удалить объявление?')) return;
+    try {
+      const r = await api('POST', '/board/delete', { id: p.id }, getToken());
+      if (r.ok) {
+        posts = r.data.posts;
+        limit = r.data.limit || limit;
+        renderFeed();
+        renderLimit();
+        toast('🗑️ Объявление удалено');
+      } else if (r.status === 401) {
+        toast('Сессия закончилась, войдите снова');
+      } else {
+        toast(r.data.error || 'Не получилось удалить');
+      }
+    } catch (_) {
+      toast('Нет связи с сервером');
+    }
+  }
+
+  /* ---------- Окно объявления ---------- */
+  const modal = $('modal');
+  const editor = $('editor');
+  const selBar = $('selBar');
+
+  function resizeImage(file, cb) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, MAX_IMG_SIDE / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * k);
+        c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        let quality = 0.8;
+        let data = c.toDataURL('image/jpeg', quality);
+        while (data.length > MAX_IMG_BYTES * 1.37 && quality > 0.4) {
+          quality -= 0.1;
+          data = c.toDataURL('image/jpeg', quality);
+        }
+        cb(data);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function renderPostImage() {
+    const wrap = $('postImgWrap');
+    wrap.textContent = '';
+    if (!postImage) return;
+    const box = document.createElement('div');
+    box.className = 'img-preview';
+    const img = document.createElement('img');
+    img.src = postImage;
+    img.alt = '';
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'x';
+    x.textContent = '×';
+    x.setAttribute('aria-label', 'Убрать фото');
+    x.addEventListener('click', () => { postImage = ''; renderPostImage(); });
+    box.append(img, x);
+    wrap.append(box);
+  }
+
+  function renderOptsLine() {
+    const parts = [];
+    if (draftOpts.bubble) parts.push('цвет сообщения');
+    if (draftOpts.color) parts.push('цвет текста');
+    if (draftOpts.silent) parts.push('бесшумно');
+    if (draftOpts.noReactions) parts.push('реакции отключены');
+    $('optsLine').textContent = parts.length ? 'Оформление: ' + parts.join(', ') : '';
+  }
+
+  function openEditor(p) {
+    editingId = p ? p.id : null;
+    $('sheetTitle').textContent = p ? 'Изменить объявление' : 'Новое объявление';
+    $('saveBtn').textContent = p ? 'Сохранить' : 'Опубликовать';
+    editor.innerHTML = p ? sanitize(p.text) : '';
+    postImage = p && p.image ? p.image : '';
+    draftOpts = p && p.opts
+      ? { bubble: p.opts.bubble || '', color: p.opts.color || '', silent: !!p.opts.silent, noReactions: !!p.opts.noReactions }
+      : { bubble: '', color: '', silent: false, noReactions: false };
+    renderPostImage();
+    renderOptsLine();
+    err('postErr', '');
+    modal.hidden = false;
+    setTimeout(() => editor.focus(), 50);
+  }
+
+  function closeModal() {
+    modal.hidden = true;
+    editingId = null;
+    selBar.classList.remove('show');
+    $('custModal').hidden = true;
+  }
+  $('cancelBtn').addEventListener('click', closeModal);
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+  // Панель оформления появляется над выделенным текстом
+  function updateSelBar() {
+    const sel = window.getSelection();
+    if (modal.hidden || !sel || sel.rangeCount === 0 || sel.isCollapsed || !editor.contains(sel.anchorNode)) {
+      selBar.classList.remove('show');
+      return;
+    }
+    const rect = sel.getRangeAt(0).getBoundingClientRect();
+    if (!rect.width && !rect.height) {
+      selBar.classList.remove('show');
+      return;
+    }
+    selBar.classList.add('show');
+    const bw = selBar.offsetWidth;
+    const bh = selBar.offsetHeight;
+    let left = rect.left + rect.width / 2 - bw / 2;
+    left = Math.max(8, Math.min(window.innerWidth - bw - 8, left));
+    let top = rect.top - bh - 8;
+    if (top < 8) top = rect.bottom + 8;
+    selBar.style.left = left + 'px';
+    selBar.style.top = top + 'px';
+  }
+  document.addEventListener('selectionchange', updateSelBar);
+  window.addEventListener('resize', updateSelBar);
+
+  // Обернуть выделение в тег (скрытый текст, цитата); повторное нажатие снимает оформление
+  function toggleWrap(tag) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    let node = range.commonAncestorContainer;
+    if (node.nodeType === 3) node = node.parentNode;
+    const existing = node.closest ? node.closest(tag) : null;
+    if (existing && editor.contains(existing)) {
+      const parent = existing.parentNode;
+      while (existing.firstChild) parent.insertBefore(existing.firstChild, existing);
+      parent.removeChild(existing);
+      return;
+    }
+    const el = document.createElement(tag);
+    try {
+      range.surroundContents(el);
+    } catch (_) {
+      el.appendChild(range.extractContents());
+      range.insertNode(el);
+    }
+    sel.removeAllRanges();
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    sel.addRange(r);
+  }
+
+  selBar.querySelectorAll('.fmt').forEach(btn => {
+    btn.addEventListener('pointerdown', e => e.preventDefault());
+    btn.addEventListener('click', () => {
+      if (btn.dataset.wrap) toggleWrap(btn.dataset.wrap);
+      else document.execCommand(btn.dataset.cmd, false, null);
+      setTimeout(updateSelBar, 0);
+    });
+  });
+
+  // Прикрепить фото
+  $('photoBtn').addEventListener('click', () => $('postFile').click());
+  $('postFile').addEventListener('change', () => {
+    const f = $('postFile').files[0];
+    $('postFile').value = '';
+    resizeImage(f, data => {
+      postImage = data;
+      renderPostImage();
+    });
+  });
+
+  /* ---------- Кастомизация ---------- */
+  function buildSwatches(containerId, key) {
+    const box = $(containerId);
+    box.textContent = '';
+    PALETTE.forEach(([hex, name]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sw' + (draftOpts[key] === hex ? ' sel' : '');
+      b.style.background = hex;
+      b.setAttribute('aria-label', name);
+      b.title = name;
+      b.addEventListener('click', () => {
+        draftOpts[key] = draftOpts[key] === hex ? '' : hex;
+        buildSwatches(containerId, key);
+        renderOptsLine();
+      });
+      box.append(b);
+    });
+  }
+
+  function setSwitch(id, on) {
+    const sw = $(id);
+    sw.classList.toggle('on', on);
+    sw.setAttribute('aria-checked', String(on));
+  }
+
+  $('custBtn').addEventListener('click', () => {
+    buildSwatches('swBubble', 'bubble');
+    buildSwatches('swText', 'color');
+    setSwitch('silentSwitch', draftOpts.silent);
+    setSwitch('noReactSwitch', draftOpts.noReactions);
+    $('custModal').hidden = false;
+  });
+  $('silentSwitch').addEventListener('click', () => {
+    draftOpts.silent = !draftOpts.silent;
+    setSwitch('silentSwitch', draftOpts.silent);
+    renderOptsLine();
+  });
+  $('noReactSwitch').addEventListener('click', () => {
+    draftOpts.noReactions = !draftOpts.noReactions;
+    setSwitch('noReactSwitch', draftOpts.noReactions);
+    renderOptsLine();
+  });
+  $('custDone').addEventListener('click', () => { $('custModal').hidden = true; });
+  $('custModal').addEventListener('click', e => { if (e.target === $('custModal')) $('custModal').hidden = true; });
+
+  /* ---------- Публикация ---------- */
+  $('saveBtn').addEventListener('click', async () => {
+    const text = sanitize(editor.innerHTML);
+    if (!plainLength(text) && !postImage) return err('postErr', '✏️ Напишите текст или добавьте фото');
+    if (plainLength(text) > 2000) return err('postErr', '✏️ Текст слишком длинный');
+
+    if (!editingId && limit && limit.used >= limit.max) {
+      return err('postErr', '⏳ Сегодня уже было опубликовано объявление. Следующее можно завтра');
+    }
+
+    $('saveBtn').disabled = true;
+    err('postErr', '');
+    try {
+      const path = editingId ? '/board/edit' : '/board';
+      const body = editingId
+        ? { id: editingId, text, image: postImage, opts: draftOpts }
+        : { text, image: postImage, opts: draftOpts };
+      const r = await api('POST', path, body, getToken());
+      if (r.ok) {
+        posts = r.data.posts;
+        limit = r.data.limit || limit;
+        renderFeed();
+        renderLimit();
+        closeModal();
+        if (!editingId) {
+          const board = document.querySelector('.screen[data-screen="board"]');
+          board.scrollTop = 0;
+        }
+      } else if (r.status === 401) {
+        toast('Сессия закончилась, войдите снова');
+      } else if (r.status === 413) {
+        err('postErr', '📷 Фото слишком большое. Выберите другое или меньшее по размеру');
+      } else {
+        err('postErr', '⚠️ ' + (r.data.error || 'Не получилось сохранить'));
+      }
+    } catch (_) {
+      err('postErr', '📡 Нет связи с сервером, попробуйте позже');
+    } finally {
+      $('saveBtn').disabled = false;
+    }
+  });
+
+  /* ---------- Профиль и состояние входа ---------- */
+  function renderProfile(u) {
+    $('pName').textContent = u.name;
+    $('pApp').textContent = u.app;
+    $('pTg').textContent = u.tg ? '@' + u.tg : '—';
+    $('photo').classList.toggle('empty', !u.avatar);
+    $('photo').style.backgroundImage = u.avatar ? `url("${u.avatar}")` : '';
+  }
+
+  function refreshProfileUI() {
+    if (me) {
+      $('authBlock').classList.add('hidden');
+      $('profileBlock').classList.remove('hidden');
+      renderProfile(me);
+    } else {
+      $('profileBlock').classList.add('hidden');
+      $('authBlock').classList.remove('hidden');
+      showView(currentView);
+    }
+    renderLimit();
+    updateBadge();
+  }
+
+  function handleResult(res, errId, expiredText) {
+    if (res.status === 'yes' && res.token) {
+      setToken(res.token);
+      me = res.user || null;
+      refreshProfileUI();
+      if (!me) fetchMe().then(refreshProfileUI);
+      loadBoard();
+      return;
+    }
+    if (res.status === 'no') err(errId, '🚫 Отменено в Telegram');
+    else if (res.status === 'expired') err(errId, expiredText);
+  }
+
+  /* ---------- Виды входа ---------- */
+  function showView(name) {
+    currentView = name;
+    const isReg = name === 'reg';
+    const isLogin = name === 'login';
+    $('tabReg').classList.toggle('on', isReg);
+    $('tabLogin').classList.toggle('on', isLogin);
+    $('authBlock').querySelector('.tabs').classList.toggle('hidden', !(isReg || isLogin));
+    $('regForm').classList.toggle('hidden', !isReg);
+    $('loginForm').classList.toggle('hidden', !isLogin);
+    $('forgotForm').classList.toggle('hidden', name !== 'forgot');
+    $('newIdForm').classList.toggle('hidden', name !== 'newid');
+    if (isReg) showStep(reg.step || 1);
+  }
+  $('tabReg').addEventListener('click', () => showView('reg'));
+  $('tabLogin').addEventListener('click', () => showView('login'));
+
+  /* ---------- Подсказки «?» ---------- */
+  function closeTips() {
+    document.querySelectorAll('.tip').forEach(t => t.classList.add('hidden'));
+    document.querySelectorAll('.help-btn').forEach(b => b.setAttribute('aria-expanded', 'false'));
+  }
+  document.querySelectorAll('.help-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const tip = $(btn.dataset.tip);
+      const wasOpen = !tip.classList.contains('hidden');
+      closeTips();
+      if (!wasOpen) {
+        tip.classList.remove('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+  document.addEventListener('pointerdown', e => {
+    if (e.target.closest && (e.target.closest('.help-btn') || e.target.closest('.tip'))) return;
+    closeTips();
+  });
+
+  /* ---------- Фото: квадрат, 256 пикселей ---------- */
+  function toSquareDataUrl(file, cb) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const size = 256;
+        const side = Math.min(img.width, img.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        canvas.getContext('2d').drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, size, size);
+        cb(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* ---------- Регистрация ---------- */
+  const reg = { step: 1, name: '', app: '', avatar: '' };
+  const TOTAL = 4;
+
+  function showStep(n) {
+    reg.step = n;
+    document.querySelectorAll('#regForm [data-step]').forEach(el => {
+      el.classList.toggle('hidden', Number(el.dataset.step) !== n);
+    });
+    $('stepInfo').textContent = `Шаг ${n} из ${TOTAL}`;
+    err('regErr', '');
+    const target = { 1: 'regName', 2: 'regApp', 4: 'regTg' }[n];
+    if (target) setTimeout(() => $(target).focus(), 30);
+  }
+
+  document.querySelectorAll('#regForm [data-next]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const n = Number(btn.dataset.next);
+      if (n === 1) {
+        const name = $('regName').value.trim();
+        if (!name) return err('regErr', '✏️ Напишите имя');
+        reg.name = name;
+      }
+      if (n === 2) {
+        const app = $('regApp').value.trim();
+        if (!APP_RE.test(app)) return err('regErr', '🏷️ TulenID: 3–20 символов, латиница, цифры или _');
+        reg.app = app;
+      }
+      showStep(n + 1);
+    });
+  });
+  document.querySelectorAll('#regForm [data-back]').forEach(btn => {
+    btn.addEventListener('click', () => showStep(Number(btn.dataset.back) - 1));
+  });
+
+  $('regPhoto').addEventListener('click', () => $('regFile').click());
+  $('regPhoto').addEventListener('keydown', e => { if (e.key === 'Enter') $('regFile').click(); });
+  $('regFile').addEventListener('change', () => {
+    const f = $('regFile').files[0];
+    $('regFile').value = '';
+    toSquareDataUrl(f, data => {
+      reg.avatar = data;
+      $('regPhoto').textContent = '';
+      $('regPhoto').classList.add('has');
+      $('regPhoto').style.backgroundImage = `url("${data}")`;
+    });
+  });
+
+  $('regSend').addEventListener('click', async () => {
+    const tg = $('regTg').value.trim().replace(/^@/, '');
+    if (!TG_RE.test(tg)) return err('regErr', '✈️ Telegram-username: 5–32 символов, начинается с буквы');
+
+    $('regSend').disabled = true;
+    err('regErr', '');
+    showWait('⏳ Отправляем запрос в Telegram...');
+    try {
+      const start = await api('POST', '/register/start', { name: reg.name, app: reg.app, tg, avatar: reg.avatar });
+      if (!start.ok) {
+        hideWait();
+        if (start.data.error === 'start_bot') {
+          err('regErr', '🤖 Сначала откройте @tulenchik_helper_bot, нажмите /start и попробуйте снова');
+        } else {
+          err('regErr', '⚠️ ' + (start.data.error || 'Ошибка, попробуйте позже'));
+        }
+        return;
+      }
+      showWait('⏳ Подтвердите создание аккаунта в Telegram');
+      const res = await waitForConfirm(start.data.id);
+      hideWait();
+      handleResult(res, 'regErr', '⏳ Время вышло, нажмите «Отправить» ещё раз');
+    } catch (_) {
+      hideWait();
+      err('regErr', '📡 Нет связи с сервером, попробуйте позже');
+    } finally {
+      $('regSend').disabled = false;
+    }
+  });
+
+  /* ---------- Вход ---------- */
+  $('loginBtn').addEventListener('click', async () => {
+    const app = $('loginApp').value.trim();
+    if (!APP_RE.test(app)) return err('loginErr', '🔍 Введите ваш TulenID');
+
+    $('loginBtn').disabled = true;
+    err('loginErr', '');
+    showWait('⏳ Отправляем запрос в Telegram...');
+    try {
+      const start = await api('POST', '/login/start', { app });
+      if (!start.ok) {
+        hideWait();
+        if (start.data.error === 'start_bot') {
+          err('loginErr', '🤖 Откройте @tulenchik_helper_bot, нажмите /start и попробуйте снова');
+        } else {
+          err('loginErr', '🔍 Такого TulenID нет. Сначала зарегистрируйтесь');
+        }
+        return;
+      }
+      showWait('⏳ Подтвердите вход в Telegram');
+      const res = await waitForConfirm(start.data.id);
+      hideWait();
+      handleResult(res, 'loginErr', '⏳ Время вышло, войдите снова');
+    } catch (_) {
+      hideWait();
+      err('loginErr', '📡 Нет связи с сервером, попробуйте позже');
+    } finally {
+      $('loginBtn').disabled = false;
+    }
+  });
+
+  /* ---------- Забыли TulenID ---------- */
+  $('forgotBtn').addEventListener('click', () => showView('forgot'));
+  $('forgotBack').addEventListener('click', () => showView('login'));
+
+  $('forgotSend').addEventListener('click', async () => {
+    const tg = $('forgotTg').value.trim().replace(/^@/, '');
+    if (!TG_RE.test(tg)) return err('forgotErr', '✈️ Введите Telegram-username, привязанный к профилю');
+
+    $('forgotSend').disabled = true;
+    err('forgotErr', '');
+    showWait('⏳ Отправляем запрос в Telegram...');
+    try {
+      const start = await api('POST', '/forgot/start', { tg });
+      if (!start.ok) {
+        hideWait();
+        if (start.data.error === 'start_bot') {
+          err('forgotErr', '🤖 Откройте @tulenchik_helper_bot, нажмите /start и попробуйте снова');
+        } else {
+          err('forgotErr', '🔍 ' + (start.data.error || 'Аккаунт не найден'));
+        }
+        return;
+      }
+      showWait('⏳ Ответьте на сообщение бота в Telegram');
+      const res = await waitForConfirm(start.data.id);
+      hideWait();
+      if (res.status === 'yes' && res.grant) {
+        grant = res.grant;
+        showView('newid');
+      } else if (res.status === 'no') {
+        toast('Ничего не изменилось');
+        showView('login');
+      } else if (res.status === 'expired') {
+        err('forgotErr', '⏳ Время вышло, попробуйте ещё раз');
+      }
+    } catch (_) {
+      hideWait();
+      err('forgotErr', '📡 Нет связи с сервером, попробуйте позже');
+    } finally {
+      $('forgotSend').disabled = false;
+    }
+  });
+
+  $('newIdCancel').addEventListener('click', () => {
+    grant = '';
+    showView('login');
+  });
+
+  $('newIdSave').addEventListener('click', async () => {
+    const id = $('newId').value.trim();
+    if (!APP_RE.test(id)) return err('newIdErr', '🎫 TulenID: 3–20 символов, латиница, цифры или _');
+
+    $('newIdSave').disabled = true;
+    err('newIdErr', '');
+    try {
+      const r = await api('POST', '/tulenid/change', { grant, tulenid: id });
+      if (r.ok) {
+        grant = '';
+        setToken(r.data.token);
+        me = r.data.user;
+        $('newId').value = '';
+        refreshProfileUI();
+        toast('✅ TulenID изменён');
+      } else if (r.status === 410) {
+        err('newIdErr', '⏳ Время вышло, начните восстановление заново');
+      } else {
+        err('newIdErr', '⚠️ ' + (r.data.error || 'Не получилось сохранить'));
+      }
+    } catch (_) {
+      err('newIdErr', '📡 Нет связи с сервером, попробуйте позже');
+    } finally {
+      $('newIdSave').disabled = false;
+    }
+  });
+
+  /* ---------- Профиль: фото, редактирование, выход ---------- */
+  async function saveProfile(fields) {
+    const r = await api('POST', '/profile', fields, getToken());
+    if (r.ok) { me = r.data.user; renderProfile(me); loadBoard(); return { ok: true }; }
+    if (r.status === 401) { clearToken(); me = null; refreshProfileUI(); return { ok: false, msg: 'Сессия закончилась, войдите снова' }; }
+    return { ok: false, msg: r.data.error || 'Не удалось сохранить' };
+  }
+
+  $('logoutBtn').addEventListener('click', () => {
+    clearToken();
+    me = null;
+    limit = null;
+    unseen = 0;
+    showView('reg');
+    refreshProfileUI();
+  });
+
+  $('photo').addEventListener('click', () => $('fileInput').click());
+  $('photo').addEventListener('keydown', e => { if (e.key === 'Enter') $('fileInput').click(); });
+  $('fileInput').addEventListener('change', () => {
+    const f = $('fileInput').files[0];
+    $('fileInput').value = '';
+    toSquareDataUrl(f, async data => {
+      const res = await saveProfile({ avatar: data });
+      if (!res.ok) toast(res.msg);
+    });
+  });
+
+  // Редактирование: имя меняется сразу; новый TulenID — только после подтверждения в боте
+  $('editBtn').addEventListener('click', () => {
+    if (!me) return;
+    $('editName').value = me.name;
+    $('editApp').value = me.app;
+    err('editErr', '');
+    $('editModal').hidden = false;
+  });
+  $('editCancel').addEventListener('click', () => { $('editModal').hidden = true; });
+  $('editModal').addEventListener('click', e => { if (e.target === $('editModal')) $('editModal').hidden = true; });
+
+  $('editSave').addEventListener('click', async () => {
+    const name = $('editName').value.trim();
+    const app = $('editApp').value.trim();
+    if (!name) return err('editErr', '✏️ Напишите имя');
+    if (app !== me.app && !APP_RE.test(app)) return err('editErr', '🏷️ TulenID: 3–20 символов, латиница, цифры или _');
+
+    $('editSave').disabled = true;
+    try {
+      if (name !== me.name) {
+        const res = await saveProfile({ name });
+        if (!res.ok) return err('editErr', '⚠️ ' + res.msg);
+      }
+
+      if (app === me.app) {
+        $('editModal').hidden = true;
+        if (name !== me.name) toast('✅ Сохранено');
+        return;
+      }
+
+      const r = await api('POST', '/tulenid/request', { tulenid: app }, getToken());
+      if (!r.ok) {
+        if (r.status === 401) { clearToken(); me = null; refreshProfileUI(); $('editModal').hidden = true; return toast('Сессия закончилась, войдите снова'); }
+        return err('editErr', '⚠️ ' + (r.data.error || 'Не получилось начать смену'));
+      }
+
+      $('editModal').hidden = true;
+      showWait('⏳ Подтвердите смену TulenID в Telegram');
+      const res = await waitForConfirm(r.data.id);
+      hideWait();
+      if (res.status === 'yes') {
+        await fetchMe();
+        refreshProfileUI();
+        toast('✅ TulenID изменён');
+      } else if (res.status === 'no') {
+        toast('Оставлено без изменений');
+      } else if (res.status === 'expired') {
+        toast('⏳ Время вышло, попробуйте ещё раз');
+      }
+    } catch (_) {
+      err('editErr', '📡 Нет связи с сервером, попробуйте позже');
+    } finally {
+      $('editSave').disabled = false;
+    }
+  });
+
+  /* ---------- Остальные переключатели (визуальные) ---------- */
+  document.querySelectorAll('.settings .switch:not(#themeSwitch):not(#vibeSwitch):not(#notifSwitch)').forEach(sw => {
+    sw.addEventListener('click', () => {
+      const on = !sw.classList.contains('on');
+      sw.classList.toggle('on', on);
+      sw.setAttribute('aria-checked', String(on));
+    });
+  });
+
+  /* ---------- Старт ---------- */
+  showView('reg');
+  // Бейдж «!» обновляется сам, пока открыто приложение
+  setInterval(() => { if (getToken() && me && current !== 1) loadBoard(); }, 60000);
+
+  /* ---------- Уведомления (Firebase Cloud Messaging) ---------- */
+  const NOTIF_KEY = 'tyulenchik.notif';
+  const PUSH_TOKEN_KEY = 'tyulenchik.pushToken';
+  const notifSwitch = $('notifSwitch');
+  const isIOSDevice = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const isStandaloneApp = navigator.standalone === true ||
+    (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+  let fbMessaging = null;
+  let swRegistration = null;
+
+  function setNotifSwitch(on) {
+    notifSwitch.classList.toggle('on', on);
+    notifSwitch.setAttribute('aria-checked', String(on));
+  }
+
+  async function initPush() {
+    if (!('serviceWorker' in navigator) || typeof firebase === 'undefined' || typeof Notification === 'undefined') return;
+    if (String(FIREBASE_CONFIG.apiKey).startsWith('ВСТАВЬТЕ')) return;
+    try {
+      if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+      fbMessaging = firebase.messaging();
+      swRegistration = await navigator.serviceWorker.register('firebase-messaging-sw.js');
+      fbMessaging.onMessage(p => {
+        const n = p.notification || {};
+        toast(`🔔 ${n.title || 'Чат Тюленчика'}: ${n.body || ''}`);
+      });
+      let saved = false;
+      try { saved = localStorage.getItem(NOTIF_KEY) === 'on'; } catch (_) {}
+      setNotifSwitch(saved && Notification.permission === 'granted');
+    } catch (_) {}
+  }
+
+  async function disablePush() {
+    try {
+      const token = localStorage.getItem(PUSH_TOKEN_KEY);
+      if (token) await api('POST', '/push/unsubscribe', { token });
+      localStorage.removeItem(NOTIF_KEY);
+      localStorage.removeItem(PUSH_TOKEN_KEY);
+    } catch (_) {}
+  }
+
+  notifSwitch.addEventListener('click', async () => {
+    const wantOn = !notifSwitch.classList.contains('on');
+    if (!wantOn) {
+      await disablePush();
+      setNotifSwitch(false);
+      return;
+    }
+    if (isIOSDevice && !isStandaloneApp) {
+      setNotifSwitch(false);
+      return toast('Сначала добавьте сайт на экран «Домой», потом включите уведомления');
+    }
+    if (!fbMessaging) {
+      setNotifSwitch(false);
+      return toast('Уведомления пока не настроены');
+    }
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') {
+        setNotifSwitch(false);
+        return toast('Разрешите уведомления в настройках телефона');
+      }
+      const token = await fbMessaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: swRegistration });
+      if (!token) throw new Error('no token');
+      const r = await api('POST', '/push/subscribe', { token });
+      if (!r.ok) throw new Error('subscribe failed');
+      localStorage.setItem(NOTIF_KEY, 'on');
+      localStorage.setItem(PUSH_TOKEN_KEY, token);
+      setNotifSwitch(true);
+      toast('🔔 Уведомления включены');
+    } catch (_) {
+      setNotifSwitch(false);
+      toast('Не получилось включить уведомления');
+    }
+  });
+
+  initPush();
+})();
+</script>
+</body>
+</html>
