@@ -138,14 +138,32 @@ jobs:
           
           echo '<?xml version="1.0" encoding="utf-8"?><resources><string name="app_name">Chat Tulenchika</string></resources>' > app/src/main/res/values/strings.xml
           
-          echo 'include ":app"' > settings.gradle
+          # Генерируем правильные Gradle файлы
+          echo 'rootProject.name = "ChatTulenchika"' > settings.gradle
+          echo 'include ":app"' >> settings.gradle
           
-          echo 'buildscript { repositories { google(); mavenCentral() } dependencies { classpath "com.android.tools.build:gradle:8.1.1" } }' > build.gradle
+          cat << 'EOF' > build.gradle
+          buildscript {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+              dependencies {
+                  classpath 'com.android.tools.build:gradle:8.1.4'
+              }
+          }
+          allprojects {
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          EOF
           
           cat << 'EOF' > app/build.gradle
-          plugins { id "com.android.application" }
+          apply plugin: 'com.android.application'
           android {
-              namespace "com.tulenchika.app"
+              namespace 'com.tulenchika.app'
               compileSdk 34
               defaultConfig {
                   applicationId "com.tulenchika.app"
@@ -154,14 +172,18 @@ jobs:
                   versionCode 1
                   versionName "1.0"
               }
+              buildTypes {
+                  release {
+                      minifyEnabled false
+                  }
+              }
           }
           EOF
 
       - name: Build with Gradle
-        uses: gradle/gradle-build-action@v3
-        with:
-          gradle-version: 8.2
-          arguments: assembleDebug
+        run: |
+          gradle wrapper --gradle-version 8.2
+          ./gradlew assembleDebug --stacktrace
           
       - name: Upload APK
         uses: actions/upload-artifact@v4
