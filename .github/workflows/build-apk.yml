@@ -29,62 +29,27 @@ jobs:
           mkdir -p app/src/main/assets
           rsync -a --exclude='.git' --exclude='.github' --exclude='app' --exclude='google-services.json' ./ app/src/main/assets/
 
-          # Шим: подменяет веб-уведомления (Firebase Web Push) на нативные Android
-          cat << 'EOF' > app/src/main/assets/android-push-shim.js
-          (function () {
-            if (!window.AndroidPush) return;
-            function N() {}
-            Object.defineProperty(N, 'permission', {
-              get: function () { return AndroidPush.hasPermission() ? 'granted' : 'default'; }
-            });
-            N.requestPermission = function () {
-              return new Promise(function (res) {
-                window.__permCb = function (ok) { res(ok ? 'granted' : 'denied'); };
-                AndroidPush.requestPermission();
-              });
-            };
-            window.Notification = N;
-            try {
-              Object.defineProperty(navigator, 'serviceWorker', {
-                value: { register: function () { return Promise.resolve({}); } },
-                configurable: true
-              });
-            } catch (e) {}
-            if (window.firebase) {
-              var fake = function () {
-                return {
-                  getToken: function () {
-                    return new Promise(function (res, rej) {
-                      window.__fcmCb = function (t) { t ? res(t) : rej(new Error('no token')); };
-                      AndroidPush.requestToken();
-                    });
-                  },
-                  onMessage: function () {}
-                };
-              };
-              try { firebase.messaging = fake; }
-              catch (e) { Object.defineProperty(firebase, 'messaging', { value: fake }); }
-            }
-          })();
-          EOF
-
-          # Подключаем шим сразу после скриптов Firebase (только в копии внутри APK)
-          sed -i 's#<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>#&<script src="android-push-shim.js"></script>#' app/src/main/assets/index.html
-          grep -q "android-push-shim.js" app/src/main/assets/index.html || echo "ВНИМАНИЕ: шим не подключён, не найден тег firebase-messaging-compat.js"
           ls -la app/src/main/assets
 
       - name: Generate Android Project
+        env:
+          GS_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          if [ -f google-services.json ]; then
-            HAS_FCM=true
-            cp google-services.json app/google-services.json
-            GMS_CLASSPATH="classpath 'com.google.gms:google-services:4.4.2'"
-            echo "google-services.json найден: сборка с нативными push-уведомлениями"
-          else
-            HAS_FCM=false
-            GMS_CLASSPATH=""
-            echo "google-services.json НЕ найден: сборка без push-уведомлений"
+          # google-services.json: из репозитория или из секрета GOOGLE_SERVICES_JSON
+          if [ ! -f google-services.json ] && [ -n "$GS_JSON" ]; then
+            printf '%s' "$GS_JSON" > google-services.json
           fi
+          if [ ! -f google-services.json ]; then
+            echo "::error::google-services.json не найден. Без него в APK не работают уведомления. Скачайте его в Firebase Console (Android-приложение com.tulenchika.app) и положите в корень репозитория."
+            exit 1
+          fi
+          if ! grep -q '"package_name": *"com.tulenchika.app"' google-services.json; then
+            echo "::error::В google-services.json нет Android-приложения с package_name com.tulenchika.app. Добавьте его в Firebase Console и скачайте файл заново."
+            exit 1
+          fi
+          HAS_FCM=true
+          cp google-services.json app/google-services.json
+          GMS_CLASSPATH="classpath 'com.google.gms:google-services:4.4.2'"
 
           echo 'rootProject.name = "ChatTulenchika"' > settings.gradle
           echo 'include ":app"' >> settings.gradle
@@ -142,14 +107,25 @@ jobs:
             SERVICE_XML=''
           fi
 
-          if [ -f icon.png ]; then
-            mkdir -p app/src/main/res/mipmap-xxxhdpi
-            cp icon.png app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          ICON_SRC=""
+          for f in icon.png B57414E5-0B7C-4480-8F05-23FEBE4F3E27.png; do
+            if [ -f "$f" ]; then ICON_SRC="$f"; break; fi
+          done
+          if [ -n "$ICON_SRC" ]; then
+            for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+              dir="app/src/main/res/mipmap-${d%%:*}"; px="${d##*:}"
+              mkdir -p "$dir"
+              if command -v convert >/dev/null 2>&1; then
+                convert "$ICON_SRC" -resize ${px}x${px} -background none -gravity center -extent ${px}x${px} "$dir/ic_launcher.png"
+              else
+                cp "$ICON_SRC" "$dir/ic_launcher.png"
+              fi
+            done
             ICON='@mipmap/ic_launcher'
-            echo "icon.png найден: используется как иконка приложения"
+            echo "Иконка приложения: $ICON_SRC"
           else
             ICON='@android:drawable/sym_def_app_icon'
-            echo "icon.png не найден: стандартная иконка"
+            echo "::warning::Файл иконки не найден: стандартная иконка"
           fi
 
           cat << EOF > app/src/main/AndroidManifest.xml
@@ -183,10 +159,16 @@ jobs:
           package com.tulenchika.app;
           import com.google.firebase.messaging.FirebaseMessaging;
           public class FcmHelper {
-              interface Cb { void done(String token); }
+              interface Cb { void done(String token, String err); }
               static void getToken(Cb cb) {
-                  FirebaseMessaging.getInstance().getToken().addOnCompleteListener(t ->
-                      cb.done(t.isSuccessful() ? t.getResult() : null));
+                  try {
+                      FirebaseMessaging.getInstance().getToken().addOnCompleteListener(t -> {
+                          if (t.isSuccessful() && t.getResult() != null) cb.done(t.getResult(), null);
+                          else cb.done(null, t.getException() != null ? String.valueOf(t.getException().getMessage()) : "no token");
+                      });
+                  } catch (Throwable e) {
+                      cb.done(null, String.valueOf(e.getMessage()));
+                  }
               }
           }
           EOF
@@ -238,8 +220,8 @@ jobs:
             cat << 'EOF' > app/src/main/java/com/tulenchika/app/FcmHelper.java
           package com.tulenchika.app;
           public class FcmHelper {
-              interface Cb { void done(String token); }
-              static void getToken(Cb cb) { cb.done(null); }
+              interface Cb { void done(String token, String err); }
+              static void getToken(Cb cb) { cb.done(null, "FCM not configured"); }
           }
           EOF
           fi
@@ -247,6 +229,7 @@ jobs:
           cat << 'EOF' > app/src/main/java/com/tulenchika/app/PushBridge.java
           package com.tulenchika.app;
           import android.webkit.JavascriptInterface;
+          import org.json.JSONObject;
           public class PushBridge {
               private final MainActivity act;
               PushBridge(MainActivity a) { act = a; }
@@ -256,8 +239,9 @@ jobs:
               public void requestPermission() { act.runOnUiThread(() -> act.requestNotifPermission()); }
               @JavascriptInterface
               public void requestToken() {
-                  FcmHelper.getToken(tok -> act.runJs("window.__fcmCb && window.__fcmCb("
-                      + (tok == null ? "null" : "'" + tok + "'") + ")"));
+                  FcmHelper.getToken((tok, err) -> act.runJs("window.__fcmCb && window.__fcmCb("
+                      + (tok == null ? "null" : JSONObject.quote(tok)) + ","
+                      + (err == null ? "null" : JSONObject.quote(err)) + ")"));
               }
           }
           EOF
@@ -426,5 +410,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Tulenchika-APK
+          name: Tulenchik-APK
           path: app/build/outputs/apk/debug/app-debug.apk
