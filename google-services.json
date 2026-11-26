@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "303031812763",
+    "project_id": "tyulenchik-chat",
+    "storage_bucket": "tyulenchik-chat.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:303031812763:android:12512166e59d609d563c3e",
+        "android_client_info": {
+          "package_name": "com.tulenchika.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzEJfwDZ-ACfshjCHMdGl3i9cgNxqWLzs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
