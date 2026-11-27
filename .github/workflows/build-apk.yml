@@ -2,6 +2,9 @@ name: Build APK
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -86,9 +89,20 @@ jobs:
                   versionCode 1
                   versionName "1.0"
               }
+              signingConfigs {
+                  release {
+                      if (System.getenv("KS_PATH")) {
+                          storeFile file(System.getenv("KS_PATH"))
+                          storePassword System.getenv("KS_PASS")
+                          keyAlias System.getenv("KS_ALIAS")
+                          keyPassword System.getenv("KS_KEY_PASS")
+                      }
+                  }
+              }
               buildTypes {
                   release {
                       minifyEnabled false
+                      signingConfig System.getenv("KS_PATH") ? signingConfigs.release : signingConfigs.debug
                   }
               }
           }
@@ -291,10 +305,8 @@ jobs:
                   WebSettings s = webView.getSettings();
                   s.setJavaScriptEnabled(true);
                   s.setDomStorageEnabled(true);
-                  s.setAllowFileAccess(true);
+                  s.setAllowFileAccess(false);
                   s.setAllowContentAccess(true);
-                  s.setAllowFileAccessFromFileURLs(true);
-                  s.setAllowUniversalAccessFromFileURLs(true);
                   s.setMediaPlaybackRequiresUserGesture(false);
                   webView.addJavascriptInterface(new PushBridge(this), "AndroidPush");
                   webView.setWebChromeClient(new WebChromeClient() {
@@ -405,10 +417,26 @@ jobs:
           echo '<?xml version="1.0" encoding="utf-8"?><resources><string name="app_name">Чат Тюленчика</string></resources>' > app/src/main/res/values/strings.xml
 
       - name: Build APK
-        run: gradle assembleDebug --no-daemon
+        env:
+          KS_B64: ${{ secrets.KS_B64 }}
+          KS_PASS: ${{ secrets.KS_PASS }}
+          KS_ALIAS: ${{ secrets.KS_ALIAS }}
+          KS_KEY_PASS: ${{ secrets.KS_KEY_PASS }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            export KS_PATH="$RUNNER_TEMP/release.jks"
+            gradle assembleRelease --no-daemon
+            echo "APK_PATH=app/build/outputs/apk/release/app-release.apk" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Секреты подписи не заданы, собирается debug-версия"
+            gradle assembleDebug --no-daemon
+            echo "APK_PATH=app/build/outputs/apk/debug/app-debug.apk" >> "$GITHUB_ENV"
+          fi
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Publish APK to Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: Tulenchik-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          tag_name: apk-${{ github.run_number }}
+          name: Чат Тюленчика (сборка ${{ github.run_number }})
+          files: ${{ env.APK_PATH }}
